@@ -1,0 +1,7 @@
+2025-04-15 18:06:24,110 - INFO - 正在进行单次HTTP检测:
+2025-04-15 18:06:24,190 - ERROR - [失败] http://connectivitycheck.gstatic.com/generate_204 错误: <urlopen error [Errno 11001] getaddrinfo failed>
+2025-04-15 18:06:24,190 - ERROR - [失败] http://www.msftconnecttest.com/connecttest.txt 错误: <urlopen error [Errno 11001] getaddrinfo failed>
+2025-04-15 18:06:24,190 - ERROR - [失败] http://connect.rom.miui.com/generate_204 错误: <urlopen error [Errno 11001] getaddrinfo failed>
+2025-04-15 18:06:24,190 - ERROR - 所有HTTP检测目标均无响应
+2025-04-15 18:06:34,320 - INFO - 正在进行单次HTTP检测:
+2025-04-15 18:06:34,450 - INFO - [成功] http://connectivitycheck.gstatic.com/generate_204 返回204
