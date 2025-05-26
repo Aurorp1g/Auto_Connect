@@ -1,0 +1,10 @@
+# 忽略所有文件
+*
+
+# 白名单机制 - 允许特定文件
+!main.py
+!favicon.ico
+!README.md
+
+# 防止.gitignore自己被忽略
+!.gitignore
