@@ -31,14 +31,11 @@ def auto_login(post_URL, get_URL, log_file_path):
         html = response.read()
         # 获取title元素内容
         res = re.findall('<title>(.*)</title>', html.decode(encoding="GBK", errors="strict"))
-        print('res:', res)
         title = ''
         if len(res) == 0:
-            print("访问",get_URL,"失败，请检查请求地址！")
-            pass
+            title = '未登录'
         else:
             title = res[0]
-        print("title:",title)
         # 根据title元素内容判断是否处于已登录状态
         if title == '登录成功':    
             print('当前状态为：已登陆成功！')
