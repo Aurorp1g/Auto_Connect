@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动连接 - WiFi 校园网助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sidebar {
+            width: 220px;
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar h2 {
+            text-align: center;
+            padding: 15px 0;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+        }
+        
+        .menu-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .menu-item.active {
+            background: rgba(102, 126, 234, 0.8);
+            border-left: 4px solid #fff;
+        }
+        
+        .menu-item .icon {
+            font-size: 18px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.running {
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.stopped {
+            background: #e74c3c;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .log-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: "Consolas", "Courier New", monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 100%;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .log-output .log-line {
+            margin-bottom: 5px;
+        }
+        
+        .log-output .log-time {
+            color: #888;
+        }
+        
+        .log-output .log-error {
+            color: #ff6b6b;
+        }
+        
+        .log-output .log-success {
+            color: #69db7c;
+        }
+        
+        .log-output .log-info {
+            color: #74c0fc;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        
+        .panel h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(235, 51, 73, 0.4);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 8px 20px;
+            font-size: 13px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .modal .btn-group {
+            justify-content: flex-end;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            color: #666;
+        }
+        
+        .status-value {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .status-value.online {
+            color: #2ecc71;
+        }
+        
+        .status-value.offline {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>WiFi 助手</h2>
+            <div class="menu-item active" data-panel="home">
+                <span class="icon">🏠</span>
+                <span>控制台</span>
+            </div>
+            <div class="menu-item" data-panel="config">
+                <span class="icon">⚙️</span>
+                <span>账号配置</span>
+            </div>
+            <div class="menu-item" data-panel="personalize">
+                <span class="icon">🎨</span>
+                <span>个性化设置</span>
+            </div>
+            <div class="menu-item" data-panel="about">
+                <span class="icon">ℹ️</span>
+                <span>关于</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="header">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">已停止</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success btn-sm" id="startBtn" onclick="startService()">启动</button>
+                    <button class="btn btn-danger btn-sm" id="stopBtn" onclick="stopService()" disabled>停止</button>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div class="panel active" id="panel-home">
+                    <div class="status-card">
+                        <h4>当前状态</h4>
+                        <div class="status-item">
+                            <span class="status-label">WiFi 连接</span>
+                            <span class="status-value" id="wifiStatus">未连接</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">网络状态</span>
+                            <span class="status-value" id="networkStatus">未检测</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">校园网认证</span>
+                            <span class="status-value" id="campusStatus">未登录</span>
+                        </div>
+                    </div>
+                    <div class="log-output" id="logOutput">
+                        <div class="log-line"><span class="log-time">[系统]</span> 等待启动...</div>
+                    </div>
+                </div>
+                
+                <div class="panel" id="panel-config">
+                    <h3>账号配置</h3>
+                    <form id="configForm">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="username" placeholder="请输入用户名">
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="password" placeholder="请输入密码">
+                        </div>
+                        <div class="form-group">
+                            <label>运营商</label>
+                            <select id="service">
+                                <option value="移动">移动</option>
+                                <option value="联通">联通</option>
+                                <option value="电信">电信</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>WiFi 名称 (SSID)</label>
+                            <input type="text" id="wifiSsid" placeholder="例如: fosu">
+                        </div>
+                        <div class="form-group">
+                            <label>网卡接口名称</label>
+                            <input type="text" id="wifiInterface" placeholder="留空自动检测">
+                            <div class="hint">可通过 ipconfig 查看，如 WLAN、Wi-Fi</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary" onclick="saveAndGenerate()">保存配置</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="panel" id="panel-personalize">
+                    <h3>个性化设置</h3>
+                    <form id="personalizeForm">
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="autoStart">
+                                <label>开机自动启动</label>
+                            </div>
+                            <div class="hint">系统启动时自动运行程序</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="runHidden">
+                                <label>启动时隐藏窗口</label>
+                            </div>
+                            <div class="hint">启动时最小化到系统托盘</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="minimizeToTray">
+                                <label>关闭时最小化到托盘</label>
+                            </div>
+                            <div class="hint">点击关闭按钮时最小化而不是退出</div>
+                        </div>
+                        <div class="form-group">
+                            <label>检测间隔（秒）</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="intervalMin" min="30" max="600" placeholder="最小间隔">
+                                <input type="number" id="intervalMax" min="30" max="600" placeholder="最大间隔">
+                            </div>
+                            <div class="hint">每次检测之间等待的随机时间范围</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary" onclick="savePersonalize()">保存设置</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="panel" id="panel-about">
+                    <h3>关于</h3>
+                    <div class="status-card">
+                        <h4>自动连接 - WiFi 校园网助手</h4>
+                        <div class="status-item">
+                            <span class="status-label">版本</span>
+                            <span class="status-value">1.0.0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">功能</span>
+                            <span class="status-value">WiFi 自动连接 + 校园网认证</span>
+                        </div>
+                    </div>
+                    <p style="color: #666; line-height: 1.8;">
+                        本程序可自动连接指定 WiFi 并完成校园网认证登录。<br>
+                        支持开机自启、后台静默运行等功能。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="firstRunModal">
+        <div class="modal">
+            <h2>欢迎使用</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                首次使用需要配置账号信息。请填写以下内容：
+            </p>
+            <form id="firstRunForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="frUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="frPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>运营商</label>
+                    <select id="frService">
+                        <option value="移动">移动</option>
+                        <option value="联通" selected>联通</option>
+                        <option value="电信">电信</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>WiFi 名称 (SSID)</label>
+                    <input type="text" id="frWifiSsid" placeholder="例如: fosu" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">保存并开始使用</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/eel.js"></script>
+    <script>
+        let isRunning = false;
+        
+        eel.expose(addLog);
+        eel.expose(updateStatus);
+        eel.expose(display_first_run);
+        
+        function update_status_py(status) {
+            Object.keys(status).forEach(key => {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const wifiStatus = document.getElementById('wifiStatus');
+                const networkStatus = document.getElementById('networkStatus');
+                const campusStatus = document.getElementById('campusStatus');
+                
+                if (key === 'running') {
+                    if (status[key]) {
+                        statusDot.className = 'status-dot running';
+                        statusText.textContent = '运行中';
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('stopBtn').disabled = false;
+                    } else {
+                        statusDot.className = 'status-dot stopped';
+                        statusText.textContent = '已停止';
+                        document.getElementById('startBtn').disabled = false;
+                        document.getElementById('stopBtn').disabled = true;
+                    }
+                }
+                
+                if (key === 'wifi_connected') {
+                    wifiStatus.textContent = status[key] ? '已连接' : '未连接';
+                    wifiStatus.className = 'status-value ' + (status[key] ? 'online' : 'offline');
+                }
+                
+                if (key === 'network_ok') {
+                    networkStatus.textContent = status[key] ? '正常' : '异常';
+                    networkStatus.className = 'status-value ' + (status[key] ? 'online' : 'offline');
+                }
+                
+                if (key === 'campus_logged') {
+                    campusStatus.textContent = status[key] ? '已登录' : '未登录';
+                    campusStatus.className = 'status-value ' + (status[key] ? 'online' : 'offline');
+                }
+            });
+        }
+        
+        eel.expose(update_status_py);
+        
+        function display_first_run() {
+            document.getElementById('firstRunModal').classList.add('show');
+        }
+        
+        function addLog(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'log-error' : 
+                             type === 'success' ? 'log-success' : 
+                             type === 'info' ? 'log-info' : '';
+            logOutput.innerHTML += `<div class="log-line"><span class="log-time">[${time}]</span> <span class="${className}">${message}</span></div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        function updateStatus() {
+            if (window.eel) {
+                window.eel.get_status()(function(status) {
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    const wifiStatus = document.getElementById('wifiStatus');
+                    const networkStatus = document.getElementById('networkStatus');
+                    const campusStatus = document.getElementById('campusStatus');
+                    
+                    if (status.running) {
+                        statusDot.className = 'status-dot running';
+                        statusText.textContent = '运行中';
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('stopBtn').disabled = false;
+                    } else {
+                        statusDot.className = 'status-dot stopped';
+                        statusText.textContent = '已停止';
+                        document.getElementById('startBtn').disabled = false;
+                        document.getElementById('stopBtn').disabled = true;
+                    }
+                    
+                    wifiStatus.textContent = status.wifi_connected ? '已连接' : '未连接';
+                    wifiStatus.className = 'status-value ' + (status.wifi_connected ? 'online' : 'offline');
+                    
+                    networkStatus.textContent = status.network_ok ? '正常' : '异常';
+                    networkStatus.className = 'status-value ' + (status.network_ok ? 'online' : 'offline');
+                    
+                    campusStatus.textContent = status.campus_logged ? '已登录' : '未登录';
+                    campusStatus.className = 'status-value ' + (status.campus_logged ? 'online' : 'offline');
+                });
+            }
+        }
+        
+        function startService() {
+            if (window.eel) {
+                window.eel.start_service()();
+                addLog('服务已启动', 'success');
+                isRunning = true;
+                updateStatus();
+            }
+        }
+        
+        function stopService() {
+            if (window.eel) {
+                window.eel.stop_service()();
+                addLog('服务已停止', 'info');
+                isRunning = false;
+                updateStatus();
+            }
+        }
+        
+        function loadConfig() {
+            if (window.eel) {
+                window.eel.load_config_for_gui()(function(config) {
+                    document.getElementById('username').value = config.username || '';
+                    document.getElementById('password').value = config.password || '';
+                    document.getElementById('service').value = config.service || '联通';
+                    document.getElementById('wifiSsid').value = config.wifi_ssid || '';
+                    document.getElementById('wifiInterface').value = config.wifi_interface || '';
+                    
+                    document.getElementById('frUsername').value = config.username || '';
+                    document.getElementById('frPassword').value = config.password || '';
+                    document.getElementById('frService').value = config.service || '联通';
+                    document.getElementById('frWifiSsid').value = config.wifi_ssid || '';
+                    
+                    document.getElementById('autoStart').checked = config.auto_start || false;
+                    document.getElementById('runHidden').checked = config.run_hidden || false;
+                    document.getElementById('minimizeToTray').checked = config.minimize_to_tray !== false;
+                    document.getElementById('intervalMin').value = config.interval_min || 60;
+                    document.getElementById('intervalMax').value = config.interval_max || 80;
+                    
+                    if (config.first_run) {
+                        document.getElementById('firstRunModal').classList.add('show');
+                    }
+                });
+            }
+        }
+        
+        function saveConfig() {
+            const config = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                service: document.getElementById('service').value,
+                wifi_ssid: document.getElementById('wifiSsid').value,
+                wifi_interface: document.getElementById('wifiInterface').value
+            };
+            
+            return new Promise(function(resolve, reject) {
+                if (window.eel) {
+                    window.eel.save_config(config)(function(result) {
+                        if (result.success) {
+                            addLog('配置已保存', 'success');
+                            resolve(true);
+                        } else {
+                            addLog('配置保存失败: ' + result.error, 'error');
+                            reject(result.error);
+                        }
+                    });
+                } else {
+                    reject('Eel 未就绪');
+                }
+            });
+        }
+        
+        function saveAndGenerate() {
+            saveConfig().then(function() {
+                generatePostData();
+            }).catch(function(error) {
+                addLog('保存配置失败: ' + error, 'error');
+            });
+        }
+        
+        function savePersonalize() {
+            const config = {
+                auto_start: document.getElementById('autoStart').checked,
+                run_hidden: document.getElementById('runHidden').checked,
+                minimize_to_tray: document.getElementById('minimizeToTray').checked,
+                interval_min: parseInt(document.getElementById('intervalMin').value) || 60,
+                interval_max: parseInt(document.getElementById('intervalMax').value) || 80
+            };
+            
+            if (window.eel) {
+                window.eel.save_personalize(config)(function(result) {
+                    if (result.success) {
+                        addLog('个性化设置已保存', 'success');
+                    } else {
+                        addLog('设置保存失败: ' + result.error, 'error');
+                    }
+                });
+            }
+        }
+        
+        function generatePostData() {
+            addLog('正在生成认证数据...', 'info');
+            if (window.eel) {
+                window.eel.generate_post_data_py()(function(result) {
+                    if (result.success) {
+                        addLog('认证数据生成成功', 'success');
+                    } else {
+                        addLog('认证数据生成失败: ' + result.error, 'error');
+                    }
+                });
+            } else {
+                addLog('Eel 未就绪，请稍后重试', 'error');
+            }
+        }
+        
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById('panel-' + this.dataset.panel).classList.add('active');
+            });
+        });
+        
+        document.getElementById('firstRunForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const config = {
+                username: document.getElementById('frUsername').value,
+                password: document.getElementById('frPassword').value,
+                service: document.getElementById('frService').value,
+                wifi_ssid: document.getElementById('frWifiSsid').value,
+                first_run: false
+            };
+            
+            if (window.eel) {
+                window.eel.save_config(config)(function(result) {
+                    if (result.success) {
+                        document.getElementById('firstRunModal').classList.remove('show');
+                        loadConfig();
+                        addLog('首次配置完成', 'success');
+                    }
+                });
+            }
+        });
+        
+        if (window.eel) {
+            window.eel.init_app();
+        }
+        
+        loadConfig();
+        setInterval(updateStatus, 2000);
+    </script>
+</body>
+</html>
