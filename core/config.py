@@ -30,6 +30,9 @@ def load_config() -> dict:
 def save_config(config: dict) -> None:
     """保存配置文件"""
     config_path = get_config_path()
+    config_dir = os.path.dirname(config_path)
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir, exist_ok=True)
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
 
@@ -121,6 +124,23 @@ def get_common_config() -> dict:
     }
 
 
+DEFAULT_RSA_EXPONENT = "10001"
+DEFAULT_RSA_MODULUS = "94dd2a8675fb779e6b9f7103698634cd400f27a154afa67af6166a43fc26417222a79506d34cacc7641946abda1785b7acf9910ad6a0978c91ec84d40b71d2891379af19ffb333e7517e390bd26ac312fe940c340466b4a5d4af1d65c3b5944078f96a1a51a5a53e4bc302818b7c9f63c4a1b07bd7d874cef1c3d4b2f5eb7871"
+
+
+def get_default_rsa_config() -> dict:
+    """获取默认RSA加密配置（锐捷校园网）"""
+    return {
+        "RSA_exponent": DEFAULT_RSA_EXPONENT,
+        "RSA_modulus": DEFAULT_RSA_MODULUS
+    }
+
+
+def get_default_post_url() -> str:
+    """获取默认的认证POST URL（锐捷校园网通用格式）"""
+    return "http://10.10.9.4/eportal/InterFace.do?method=login"
+
+
 def get_post_header_path() -> str:
     """获取请求头文件路径"""
     return os.path.join(
@@ -173,4 +193,3 @@ POST_HEADER_PATH = get_post_header_path()
 POST_DATA_PATH = get_post_data_path()
 POST_HEADER_JS_PATH = get_post_header_js_path()
 POST_DATA_JS_PATH = get_post_data_js_path()
-

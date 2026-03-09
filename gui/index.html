@@ -3,8 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动连接 - WiFi 校园网助手</title>
+    <title>Auto_Connect - WiFi 校园网助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --accent: #22d3ee;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -12,59 +32,185 @@
         }
         
         body {
-            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.05) 0%, transparent 30%);
+            pointer-events: none;
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite;
+        }
+        
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; width: 6px; height: 6px; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 1s; width: 3px; height: 3px; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; width: 5px; height: 5px; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 2.5s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 1.5s; width: 4px; height: 4px; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 4.5s; }
+        .particle:nth-child(10) { left: 15%; animation-delay: 3.5s; width: 2px; height: 2px; }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.4;
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
         }
         
         .container {
             display: flex;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.95);
+            height: calc(100vh - 40px);
             margin: 20px;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
         }
         
         .sidebar {
-            width: 220px;
-            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+            width: 240px;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
             color: white;
-            padding: 20px 0;
+            padding: 25px 0;
             display: flex;
             flex-direction: column;
+            border-right: 1px solid var(--glass-border);
         }
         
         .sidebar h2 {
             text-align: center;
-            padding: 15px 0;
-            font-size: 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 10px;
+            padding: 10px 20px 25px;
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
         }
         
         .menu-item {
-            padding: 15px 25px;
+            padding: 14px 28px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
+            color: var(--gray);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
         }
         
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(99, 102, 241, 0.1);
+            color: white;
         }
         
         .menu-item.active {
-            background: rgba(102, 126, 234, 0.8);
-            border-left: 4px solid #fff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+            color: white;
+        }
+        
+        .menu-item.active::before {
+            transform: scaleY(1);
         }
         
         .menu-item .icon {
             font-size: 18px;
+            width: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .menu-item.active .icon {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+        }
+        
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .sidebar-footer .version {
+            color: var(--gray);
+            font-size: 12px;
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            display: inline-block;
         }
         
         .main-content {
@@ -72,81 +218,172 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.02);
         }
         
         .header {
-            padding: 15px 20px;
-            background: #fff;
-            border-bottom: 1px solid #eee;
+            padding: 18px 30px;
+            background: rgba(30, 41, 59, 0.5);
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+            opacity: 0.5;
         }
         
         .status-indicator {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
         
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: #ccc;
+            background: var(--gray);
+            position: relative;
         }
         
-        .status-dot.running {
-            background: #2ecc71;
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: inherit;
+            opacity: 0;
             animation: pulse 2s infinite;
         }
         
-        .status-dot.stopped {
-            background: #e74c3c;
+        .status-dot.running {
+            background: var(--success);
+            box-shadow: 0 0 15px var(--success);
         }
         
-        @keyframes pulse {
+        .status-dot.stopped {
+            background: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+        
+        .status-dot.connecting {
+            background: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px var(--primary); }
+            50% { box-shadow: 0 0 25px var(--primary), 0 0 50px var(--primary); }
         }
         
         .content-area {
             flex: 1;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
-            background: #f8f9fa;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.2) 100%);
+        }
+        
+        .content-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .content-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+        
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
         }
         
         .log-output {
-            background: #1e1e1e;
-            color: #00ff00;
-            font-family: "Consolas", "Courier New", monospace;
+            background: rgba(0, 0, 0, 0.4);
+            color: #22d3ee;
+            font-family: 'Consolas', 'Monaco', monospace;
             padding: 15px;
-            border-radius: 8px;
-            height: 100%;
+            border-radius: 12px;
+            height: 300px;
             overflow-y: auto;
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.6;
+            flex-shrink: 0;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-output::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .log-output::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .log-output::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .log-output::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+        
+        .log-container {
+            margin-top: 20px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
         }
         
         .log-output .log-line {
             margin-bottom: 5px;
+            padding: 2px 0;
         }
         
         .log-output .log-time {
-            color: #888;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
         }
         
         .log-output .log-error {
-            color: #ff6b6b;
+            color: var(--danger);
         }
         
         .log-output .log-success {
-            color: #69db7c;
+            color: var(--success);
         }
         
         .log-output .log-info {
-            color: #74c0fc;
+            color: var(--primary-light);
+        }
+        
+        .log-output .log-warning {
+            color: var(--warning);
         }
         
         .panel {
@@ -158,110 +395,258 @@
         }
         
         .panel h3 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-            font-size: 20px;
+            margin-bottom: 24px;
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 12px;
+        }
+        
+        .panel h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+        
+        .link {
+            color: var(--primary-light);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .link:hover {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .about-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            color: var(--gray);
+            font-size: 12px;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #555;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
             font-weight: 500;
+            font-size: 14px;
         }
         
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
         }
         
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .form-group select {
+            cursor: pointer;
+        }
+        
+        .form-group select option {
+            background: var(--dark-light);
+            color: white;
         }
         
         .form-group .hint {
             font-size: 12px;
-            color: #999;
-            margin-top: 5px;
+            color: var(--gray);
+            margin-top: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            resize: vertical;
+            background: rgba(0, 0, 0, 0.3);
+            color: #22d3ee;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
         
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
+            accent-color: var(--primary);
         }
         
         .btn {
             padding: 12px 30px;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
         }
         
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.4);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+        
+        .btn-success:active {
+            transform: translateY(0);
         }
         
         .btn-danger {
-            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
         
         .btn-danger:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(235, 51, 73, 0.4);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+        }
+        
+        .btn-danger:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--gray) 0%, #475569 100%);
+            color: white;
+            opacity: 0.9;
+        }
+        
+        .btn-secondary:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
         }
         
         .btn-group {
             display: flex;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 25px;
         }
         
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
         
         .btn-sm {
-            padding: 8px 20px;
+            padding: 10px 24px;
             font-size: 13px;
+            border-radius: 8px;
+        }
+        
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .alert-info {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            color: #22d3ee;
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+        
+        .alert .icon {
+            font-size: 18px;
+            flex-shrink: 0;
         }
         
         .modal-overlay {
@@ -270,7 +655,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -282,43 +668,89 @@
         }
         
         .modal {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
+            background: linear-gradient(180deg, var(--dark-light) 0%, var(--dark) 100%);
+            border-radius: 20px;
+            padding: 35px;
             width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
+            max-width: 520px;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
         
         .modal h2 {
-            margin-bottom: 20px;
-            color: #2c3e50;
+            margin-bottom: 24px;
+            color: white;
+            font-weight: 600;
+            font-size: 24px;
+        }
+        
+        .modal p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
         }
         
         .modal .btn-group {
             justify-content: flex-end;
         }
         
+        .modal .form-group label {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .modal .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
         .status-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        
+        .status-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
         }
         
         .status-card h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 16px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-card h4::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            animation: glow 2s infinite;
         }
         
         .status-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s;
+        }
+        
+        .status-item:hover {
+            padding-left: 8px;
+            padding-right: 8px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
         }
         
         .status-item:last-child {
@@ -326,42 +758,63 @@
         }
         
         .status-label {
-            color: #666;
+            color: var(--gray);
+            font-size: 14px;
         }
         
         .status-value {
-            font-weight: 500;
-            color: #2c3e50;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
         }
         
         .status-value.online {
-            color: #2ecc71;
+            color: var(--success);
         }
         
         .status-value.offline {
-            color: #e74c3c;
+            color: var(--danger);
         }
     </style>
 </head>
 <body>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
     <div class="container">
         <div class="sidebar">
-            <h2>WiFi 助手</h2>
+            <h2><i class="fas fa-wifi"></i> Auto_Connect</h2>
             <div class="menu-item active" data-panel="home">
-                <span class="icon">🏠</span>
+                <span class="icon"><i class="fas fa-house"></i></span>
                 <span>控制台</span>
             </div>
             <div class="menu-item" data-panel="config">
-                <span class="icon">⚙️</span>
+                <span class="icon"><i class="fas fa-gear"></i></span>
                 <span>账号配置</span>
             </div>
             <div class="menu-item" data-panel="personalize">
-                <span class="icon">🎨</span>
+                <span class="icon"><i class="fas fa-palette"></i></span>
                 <span>个性化设置</span>
             </div>
+            <div class="menu-item" data-panel="dev">
+                <span class="icon"><i class="fas fa-wrench"></i></span>
+                <span>开发选项</span>
+            </div>
             <div class="menu-item" data-panel="about">
-                <span class="icon">ℹ️</span>
+                <span class="icon"><i class="fas fa-circle-info"></i></span>
                 <span>关于</span>
+            </div>
+            <div class="sidebar-footer">
+                <span class="version">v1.0.0</span>
             </div>
         </div>
         
@@ -369,7 +822,7 @@
             <div class="header">
                 <div class="status-indicator">
                     <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">已停止</span>
+                    <span id="statusText" style="color: white; font-weight: 500;">已停止</span>
                 </div>
                 <div class="action-buttons">
                     <button class="btn btn-success btn-sm" id="startBtn" onclick="startService()">启动</button>
@@ -394,13 +847,19 @@
                             <span class="status-value" id="campusStatus">未登录</span>
                         </div>
                     </div>
-                    <div class="log-output" id="logOutput">
-                        <div class="log-line"><span class="log-time">[系统]</span> 等待启动...</div>
+                    <div class="log-container">
+                        <div class="log-output" id="logOutput">
+                            <div class="log-line"><span class="log-time">[系统]</span> 等待启动...</div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="panel" id="panel-config">
                     <h3>账号配置</h3>
+                    <div class="alert alert-info">
+                        <span class="icon"><i class="fas fa-circle-info"></i></span>
+                        <span>本程序当前仅支持<strong>锐捷(Ruijie) ePortal 系统</strong>校园网认证。如需其他校园网类型，请联系开发者适配。</span>
+                    </div>
                     <form id="configForm">
                         <div class="form-group">
                             <label>用户名</label>
@@ -426,6 +885,11 @@
                             <label>网卡接口名称</label>
                             <input type="text" id="wifiInterface" placeholder="留空自动检测">
                             <div class="hint">可通过 ipconfig 查看，如 WLAN、Wi-Fi</div>
+                        </div>
+                        <div class="form-group">
+                            <label>校园网登录页面 URL (index_url)</label>
+                            <input type="text" id="indexUrl" placeholder="请输入校园网登录页面完整URL">
+                            <div class="hint">连接校园网后，浏览器会自动跳转到登录页面，复制地址栏URL粘贴到此处</div>
                         </div>
                         <div class="btn-group">
                             <button type="button" class="btn btn-primary" onclick="saveAndGenerate()">保存配置</button>
@@ -471,6 +935,25 @@
                     </form>
                 </div>
                 
+                <div class="panel" id="panel-dev">
+                    <h3>开发选项</h3>
+                    <div class="alert alert-warning">
+                        <span class="icon"><i class="fas fa-triangle-exclamation"></i></span>
+                        <span>此选项仅供开发调试使用，请勿随意修改。错误修改可能导致程序无法正常运行。</span>
+                    </div>
+                    <form id="devForm">
+                        <div class="form-group">
+                            <label>JSON 配置</label>
+                            <textarea id="devConfigJson" rows="15" placeholder='{"key": "value"}'></textarea>
+                            <div class="hint">可编辑以下字段：RSA_exponent, RSA_modulus, post_url, index_url</div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary" onclick="saveDevConfig()">保存 JSON</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadDevConfig()">重新加载</button>
+                        </div>
+                    </form>
+                </div>
+                
                 <div class="panel" id="panel-about">
                     <h3>关于</h3>
                     <div class="status-card">
@@ -478,6 +961,18 @@
                         <div class="status-item">
                             <span class="status-label">版本</span>
                             <span class="status-value">1.0.0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">作者</span>
+                            <span class="status-value">Aurorp1g</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">GitHub</span>
+                            <span class="status-value">
+                                <a href="https://github.com/Aurorp1g/Auto_Connect" target="_blank" class="link">
+                                    <i class="fab fa-github"></i> Auto_Connect
+                                </a>
+                            </span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">功能</span>
@@ -488,6 +983,9 @@
                         本程序可自动连接指定 WiFi 并完成校园网认证登录。<br>
                         支持开机自启、后台静默运行等功能。
                     </p>
+                    <div class="about-footer">
+                        <p>© 2024 Auto_Connect. All rights reserved.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -496,6 +994,10 @@
     <div class="modal-overlay" id="firstRunModal">
         <div class="modal">
             <h2>欢迎使用</h2>
+            <div class="alert alert-warning" style="margin-bottom: 15px;">
+                <span class="icon"><i class="fas fa-triangle-exclamation"></i></span>
+                <span>本程序当前仅支持<strong>锐捷(Ruijie)</strong>校园网认证。如需其他校园网类型，请联系开发者适配。</span>
+            </div>
             <p style="margin-bottom: 20px; color: #666;">
                 首次使用需要配置账号信息。请填写以下内容：
             </p>
@@ -520,6 +1022,11 @@
                     <label>WiFi 名称 (SSID)</label>
                     <input type="text" id="frWifiSsid" placeholder="例如: fosu" required>
                 </div>
+                <div class="form-group">
+                    <label>校园网登录页面 URL (index_url)</label>
+                    <input type="text" id="frIndexUrl" placeholder="请输入校园网登录页面完整URL" required>
+                    <div class="hint">连接校园网WiFi后，浏览器会自动跳转到登录页面，复制地址栏完整URL粘贴到此处</div>
+                </div>
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">保存并开始使用</button>
                 </div>
@@ -534,6 +1041,32 @@
         eel.expose(addLog);
         eel.expose(updateStatus);
         eel.expose(display_first_run);
+        eel.expose(push_log_message);
+        eel.expose(show_window);
+        eel.expose(stop_gui);
+        
+        function show_window() {
+            window.show();
+        }
+        
+        function stop_gui() {
+            window.close();
+        }
+        
+        function push_log_message(message, msg_type) {
+            const logOutput = document.getElementById('logOutput');
+            if (!logOutput) return;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            
+            const logLine = document.createElement('div');
+            logLine.className = 'log-line';
+            logLine.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="log-${msg_type}">${message}</span>`;
+            
+            logOutput.appendChild(logLine);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
         
         function update_status_py(status) {
             Object.keys(status).forEach(key => {
@@ -649,11 +1182,13 @@
                     document.getElementById('service').value = config.service || '联通';
                     document.getElementById('wifiSsid').value = config.wifi_ssid || '';
                     document.getElementById('wifiInterface').value = config.wifi_interface || '';
+                    document.getElementById('indexUrl').value = config.index_url || '';
                     
                     document.getElementById('frUsername').value = config.username || '';
                     document.getElementById('frPassword').value = config.password || '';
                     document.getElementById('frService').value = config.service || '联通';
                     document.getElementById('frWifiSsid').value = config.wifi_ssid || '';
+                    document.getElementById('frIndexUrl').value = config.index_url || '';
                     
                     document.getElementById('autoStart').checked = config.auto_start || false;
                     document.getElementById('runHidden').checked = config.run_hidden || false;
@@ -674,7 +1209,8 @@
                 password: document.getElementById('password').value,
                 service: document.getElementById('service').value,
                 wifi_ssid: document.getElementById('wifiSsid').value,
-                wifi_interface: document.getElementById('wifiInterface').value
+                wifi_interface: document.getElementById('wifiInterface').value,
+                index_url: document.getElementById('indexUrl').value
             };
             
             return new Promise(function(resolve, reject) {
@@ -737,6 +1273,34 @@
             }
         }
         
+        function loadDevConfig() {
+            if (window.eel) {
+                window.eel.load_raw_config()(function(config) {
+                    document.getElementById('devConfigJson').value = JSON.stringify(config, null, 4);
+                    addLog('配置已重新加载', 'info');
+                });
+            }
+        }
+        
+        function saveDevConfig() {
+            const jsonStr = document.getElementById('devConfigJson').value;
+            try {
+                const config = JSON.parse(jsonStr);
+                if (window.eel) {
+                    window.eel.save_raw_config(config)(function(result) {
+                        if (result.success) {
+                            addLog('开发配置已保存', 'success');
+                            generatePostData();
+                        } else {
+                            addLog('保存失败: ' + result.error, 'error');
+                        }
+                    });
+                }
+            } catch (e) {
+                addLog('JSON 格式错误: ' + e.message, 'error');
+            }
+        }
+        
         document.querySelectorAll('.menu-item').forEach(item => {
             item.addEventListener('click', function() {
                 document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
@@ -754,6 +1318,7 @@
                 password: document.getElementById('frPassword').value,
                 service: document.getElementById('frService').value,
                 wifi_ssid: document.getElementById('frWifiSsid').value,
+                index_url: document.getElementById('frIndexUrl').value,
                 first_run: false
             };
             
@@ -762,6 +1327,7 @@
                     if (result.success) {
                         document.getElementById('firstRunModal').classList.remove('show');
                         loadConfig();
+                        generatePostData();
                         addLog('首次配置完成', 'success');
                     }
                 });
@@ -773,6 +1339,7 @@
         }
         
         loadConfig();
+        loadDevConfig();
         setInterval(updateStatus, 2000);
     </script>
 </body>
