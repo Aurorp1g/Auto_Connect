@@ -63,6 +63,7 @@ def auto_login(
     post_response = None
     get_status = None
     error_msg = None
+    login_success = False
     
     try:
         response = request.urlopen(get_url)
@@ -94,6 +95,10 @@ def auto_login(
             school_web_login_url = get_url
             get_status = requests.get(school_web_login_url).status_code
             print(f"get请求状态码 {get_status}")
+            
+            if post_response.status_code == 200:
+                login_success = True
+                title = '登录成功'
         
     except Exception as e:
         print(f"发生错误: {str(e)}")
@@ -113,7 +118,7 @@ def auto_login(
     if os.path.getsize(log_file_path) > 1024:
         open(log_file_path, 'w').close()
         
-    return title == '登录成功', error_msg
+    return login_success, error_msg
 
 
 def ensure_internet_access() -> bool:
