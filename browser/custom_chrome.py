@@ -13,7 +13,7 @@ def get_chrome_path():
     chrome_path = os.path.join(base_path, 'chromium', 'chrome.exe')
     return chrome_path
 
-def start_chrome_for_eel(port=8888):
+def start_chrome_for_eel(port=8888, hidden=False):
     chrome_path = get_chrome_path()
     
     if not os.path.exists(chrome_path):
@@ -34,8 +34,13 @@ def start_chrome_for_eel(port=8888):
         '--disable-features=TranslateUI',
         '--disable-extensions',
         '--remote-debugging-port=9222',
-        '--window-size=1200,750'
+        '--window-size=1200,750',
+        '--force-dark-mode',
+        '--disable-features=ChromeDarkMode'
     ]
     
-    proc = sps.Popen(cmd, stdout=sps.PIPE, stderr=sps.PIPE, stdin=sps.PIPE)
+    if hidden:
+        cmd.append('--hidden')
+    
+    proc = sps.Popen(cmd, stdout=sps.DEVNULL, stderr=sps.DEVNULL, stdin=sps.DEVNULL, creationflags=sps.CREATE_NEW_PROCESS_GROUP)
     return proc
