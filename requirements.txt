@@ -1,3 +1,4 @@
 eel
 pystray
 Pillow
+# pyinstaller --onedir --contents-directory . --name Auto_Connect --add-data "gui;gui"  --add-data "chromium;chromium" --add-data "post;post" --noconsole -i favicon.ico auto_connect.py

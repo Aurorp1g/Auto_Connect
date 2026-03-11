@@ -6,7 +6,7 @@ WiFi 连接模块
 import subprocess
 import re
 from typing import Optional, Tuple
-from .config import WIFI_CONFIG, COMMON_CONFIG
+from .config import get_wifi_config, COMMON_CONFIG
 
 
 def run_netsh_command(args: list, timeout: int = None) -> Tuple[str, str, bool]:
@@ -89,7 +89,7 @@ def is_connected(target_ssid: str = None) -> bool:
         target_ssid: 目标 WiFi 名称，None 则使用配置中的默认 SSID
     """
     if target_ssid is None:
-        target_ssid = WIFI_CONFIG["target_ssid"]
+        target_ssid = get_wifi_config()["target_ssid"]
     
     stdout, _, success = run_netsh_command(["wlan", "show", "interfaces"])
     
@@ -120,11 +120,12 @@ def connect_to_wifi(ssid: str = None, interface_name: str = None) -> bool:
         bool: 命令是否发送成功（不代表连接成功建立）
     """
     if ssid is None:
-        ssid = WIFI_CONFIG["target_ssid"]
+        ssid = get_wifi_config()["target_ssid"]
     
     if not interface_name:
-        if WIFI_CONFIG["interface_name"]:
-            interface_name = WIFI_CONFIG["interface_name"]
+        wifi_config = get_wifi_config()
+        if wifi_config["interface_name"]:
+            interface_name = wifi_config["interface_name"]
         else:
             interface_name = get_first_wlan_interface()
             if not interface_name:
@@ -161,7 +162,7 @@ def ensure_wifi_connected() -> bool:
     Returns:
         bool: 是否已连接或连接成功
     """
-    target_ssid = WIFI_CONFIG["target_ssid"]
+    target_ssid = get_wifi_config()["target_ssid"]
     
     if is_connected(target_ssid):
         print(f"已经连接到 [{target_ssid}]，无需重复连接")

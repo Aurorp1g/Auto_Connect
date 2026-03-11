@@ -2,3 +2,5 @@
 data/*
 logs/*
 chromium/user_data/*
+build/*
+dist/*

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auto_Connect - WiFi 校园网助手</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,15 +15,19 @@
             --primary-dark: #4f46e5;
             --primary-light: #818cf8;
             --accent: #22d3ee;
+            --accent-glow: #67e8f9;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
             --dark: #0f172a;
+            --dark-deep: #030712;
             --dark-light: #1e293b;
             --gray: #64748b;
             --light: #f8fafc;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glow-primary: rgba(99, 102, 241, 0.4);
+            --glow-accent: rgba(34, 211, 238, 0.3);
         }
         
         * {
@@ -33,7 +38,7 @@
         
         body {
             font-family: 'Inter', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: linear-gradient(135deg, #030712 0%, #0f172a 50%, #1e1b4b 100%);
             min-height: 100vh;
             overflow: hidden;
             position: relative;
@@ -48,10 +53,24 @@
             bottom: 0;
             background: 
                 radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.05) 0%, transparent 30%);
+                radial-gradient(circle at 80% 20%, rgba(34, 211, 238, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 30%);
             pointer-events: none;
             animation: bgPulse 8s ease-in-out infinite;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
         }
         
         @keyframes bgPulse {
@@ -126,24 +145,44 @@
         
         .sidebar {
             width: 240px;
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(3, 7, 18, 1) 100%);
             color: white;
             padding: 25px 0;
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
         }
         
         .sidebar h2 {
             text-align: center;
             padding: 10px 20px 25px;
             font-size: 20px;
-            font-weight: 600;
-            background: linear-gradient(135deg, var(--primary-light), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 1px;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .sidebar h2::after {
+            content: 'WiFi 校园网自动连接';
+            display: block;
+            font-size: 9px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-top: 4px;
+            opacity: 0.7;
         }
         
         .menu-item {
@@ -153,7 +192,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            color: var(--gray);
+            color: rgba(255, 255, 255, 0.5);
             font-weight: 500;
             position: relative;
             overflow: hidden;
@@ -164,16 +203,21 @@
             position: absolute;
             left: 0;
             top: 0;
-            height: 100%;
             width: 3px;
+            height: 100%;
             background: linear-gradient(180deg, var(--primary), var(--accent));
             transform: scaleY(0);
             transition: transform 0.3s ease;
         }
         
         .menu-item:hover {
-            background: rgba(99, 102, 241, 0.1);
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
             color: white;
+            padding-left: 32px;
+        }
+        
+        .menu-item:hover::before {
+            transform: scaleY(1);
         }
         
         .menu-item.active {
@@ -183,6 +227,17 @@
         
         .menu-item.active::before {
             transform: scaleY(1);
+        }
+        
+        .menu-item .icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .menu-item .icon {
@@ -255,6 +310,20 @@
             border-radius: 50%;
             background: var(--gray);
             position: relative;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-dot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
         }
         
         .status-dot::after {
@@ -269,18 +338,43 @@
         
         .status-dot.running {
             background: var(--success);
-            box-shadow: 0 0 15px var(--success);
+            box-shadow: 0 0 15px var(--success), 0 0 30px rgba(16, 185, 129, 0.3);
+            animation: status-pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.running::after {
+            animation: status-ring 1.5s ease-out infinite;
         }
         
         .status-dot.stopped {
             background: var(--danger);
-            box-shadow: 0 0 10px var(--danger);
+            box-shadow: 0 0 10px var(--danger), 0 0 20px rgba(239, 68, 68, 0.3);
         }
         
         .status-dot.connecting {
             background: var(--warning);
-            box-shadow: 0 0 10px var(--warning);
+            box-shadow: 0 0 10px var(--warning), 0 0 20px rgba(245, 158, 11, 0.3);
             animation: blink 1s infinite;
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { 
+                box-shadow: 0 0 15px var(--success), 0 0 30px rgba(16, 185, 129, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 25px var(--success), 0 0 50px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.2);
+            }
+        }
+
+        @keyframes status-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
         }
         
         @keyframes blink {
@@ -296,7 +390,9 @@
         .content-area {
             flex: 1;
             padding: 25px;
-            overflow-y: auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             background: linear-gradient(180deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.2) 100%);
         }
         
@@ -319,18 +415,21 @@
         }
         
         .log-output {
-            background: rgba(0, 0, 0, 0.4);
-            color: #22d3ee;
-            font-family: 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.4) 100%);
+            color: #67e8f9;
+            font-family: 'Consolas', 'Monaco', 'JetBrains Mono', monospace;
             padding: 15px;
-            border-radius: 12px;
-            height: 300px;
+            border-radius: 0;
+            min-height: 200px;
             overflow-y: auto;
             font-size: 13px;
-            line-height: 1.6;
-            flex-shrink: 0;
-            border: 1px solid rgba(34, 211, 238, 0.2);
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            line-height: 1.8;
+            flex: 1;
+            border: none;
+            box-shadow: 
+                inset 0 2px 10px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(34, 211, 238, 0.05);
+            position: relative;
         }
         
         .log-output::-webkit-scrollbar {
@@ -338,60 +437,185 @@
         }
         
         .log-output::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 3px;
         }
         
         .log-output::-webkit-scrollbar-thumb {
-            background: var(--primary);
+            background: linear-gradient(180deg, var(--accent), var(--primary));
             border-radius: 3px;
         }
         
         .log-output::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-light);
+            background: linear-gradient(180deg, var(--primary-light), var(--accent));
         }
         
         .log-container {
+            flex: 1;
             margin-top: 20px;
             border: 1px solid rgba(34, 211, 238, 0.2);
             border-radius: 12px;
             overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 0 30px rgba(34, 211, 238, 0.1),
+                inset 0 0 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .log-header {
+            padding: 10px 22px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: rgba(34, 211, 238, 0.6);
             background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+            border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-header::before {
+            content: '>_';
+            color: var(--accent);
+            font-weight: 700;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            text-shadow: 0 0 8px var(--accent);
         }
         
         .log-output .log-line {
-            margin-bottom: 5px;
-            padding: 2px 0;
+            margin-bottom: 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transition: background 0.2s;
+            animation: log-fade-in 0.3s ease-out;
         }
-        
+
+        .log-output .log-line:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        @keyframes log-fade-in {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-output .log-line .log-type {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .log-output .log-line .log-type.info {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+
+        .log-output .log-line .log-type.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .log-output .log-line .log-type.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .log-output .log-line .log-type.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
         .log-output .log-time {
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.35);
             font-size: 12px;
+            flex-shrink: 0;
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 80px;
         }
         
         .log-output .log-error {
-            color: var(--danger);
+            color: #f87171;
+            font-weight: 500;
         }
         
         .log-output .log-success {
-            color: var(--success);
+            color: #34d399;
+            font-weight: 500;
         }
         
         .log-output .log-info {
-            color: var(--primary-light);
+            color: #67e8f9;
+            font-weight: 500;
         }
         
         .log-output .log-warning {
-            color: var(--warning);
+            color: #fbbf24;
+            font-weight: 500;
         }
         
         .panel {
             display: none;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .panel.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #panel-home.panel.active {
+            overflow: hidden !important;  /* 强制禁用，保留你原来的设计意图 */
+        }
+
+        #panel-help.panel.active {
+            display: block;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
-        .panel.active {
-            display: block;
+        .panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .panel::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
         }
         
         .panel h3 {
@@ -410,7 +634,6 @@
             left: 0;
             width: 50px;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
             border-radius: 2px;
         }
         
@@ -431,10 +654,406 @@
         .about-footer {
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid var(--glass-border);
             text-align: center;
             color: var(--gray);
             font-size: 12px;
+            position: relative;
+        }
+        
+        .footer-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .footer-tech {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .footer-tech img {
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .about-header {
+            text-align: center;
+            padding: 30px 0;
+            position: relative;
+        }
+
+        .about-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .about-logo {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(99, 102, 241, 0.1);
+            animation: logo-glow 3s ease-in-out infinite, logo-float 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .about-logo::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0.3;
+            z-index: -1;
+            filter: blur(15px);
+            animation: logo-blur 3s ease-in-out infinite;
+        }
+
+        @keyframes logo-glow {
+            0%, 100% { box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(99, 102, 241, 0.1); }
+            50% { box-shadow: 0 15px 60px rgba(99, 102, 241, 0.7), 0 0 0 8px rgba(99, 102, 241, 0.15), 0 0 40px rgba(103, 232, 249, 0.3); }
+        }
+
+        @keyframes logo-blur {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+        }
+        
+        @keyframes logo-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        
+        .about-header h3 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, white 0%, var(--accent) 50%, var(--accent-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .about-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        
+        .about-card {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 35px 0;
+            flex-wrap: wrap;
+        }
+        
+        .about-stat {
+            text-align: center;
+            padding: 24px 32px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            min-width: 110px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .about-stat:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%);
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(103, 232, 249, 0.1);
+        }
+
+        .about-stat:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-value {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, white, var(--accent-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .about-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 35px 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .feature-item:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border-color: rgba(255,255,255,0.12);
+            transform: translateX(6px);
+            color: white;
+        }
+
+        .feature-item:hover::before {
+            opacity: 1;
+        }
+        
+        .feature-item i {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(103, 232, 249, 0.15) 100%);
+            border-radius: 10px;
+            color: var(--accent-glow);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .feature-item:hover i {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .feature-item span {
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .about-github {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .github-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .github-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .github-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .github-btn:hover::before {
+            opacity: 0.15;
+        }
+        
+        .github-btn i {
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .github-btn span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .help-section {
+            margin-bottom: 20px;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .help-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.6;
+        }
+
+        .help-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .help-section:hover {
+            transform: translateX(8px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .help-section h4 {
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .help-section h4 i {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-glow) 100%);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(103, 232, 249, 0.3);
+        }
+
+        .help-section .step-number {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 48px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.04);
+            line-height: 1;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .help-section ul {
+            margin: 0;
+            padding-left: 24px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.9;
+        }
+        
+        .help-section li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 8px;
+        }
+
+        .help-section li::marker {
+            color: var(--accent);
+        }
+
+        .help-section li:hover {
+            color: rgba(255,255,255,0.95);
+        }
+        
+        .help-section code {
+            background: linear-gradient(135deg, rgba(103,232,249,0.15) 0%, rgba(103,232,249,0.05) 100%);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--accent-glow);
+            border: 1px solid rgba(103,232,249,0.2);
         }
         
         .form-group {
@@ -452,34 +1071,54 @@
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
             font-size: 14px;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             color: white;
+            backdrop-filter: blur(5px);
+            position: relative;
         }
         
         .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.5px;
         }
         
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, rgba(34, 211, 238, 0.02) 100%);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 8px 30px rgba(34, 211, 238, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .form-group input:focus::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-group input:hover:not(:focus),
+        .form-group select:hover:not(:focus) {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
         }
         
         .form-group select {
             cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
         }
         
         .form-group select option {
             background: var(--dark-light);
             color: white;
+            padding: 10px;
         }
         
         .form-group .hint {
@@ -512,11 +1151,60 @@
             gap: 12px;
         }
         
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
         .checkbox-group input[type="checkbox"] {
+            appearance: none;
+            width: 48px;
+            height: 26px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            border: none;
+        }
+
+        .checkbox-group input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
             width: 20px;
             height: 20px;
-            cursor: pointer;
-            accent-color: var(--primary);
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkbox-group input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .checkbox-group input[type="checkbox"]:checked::before {
+            transform: translateX(22px);
+        }
+
+        .checkbox-group input[type="checkbox"]:hover:not(:checked) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .checkbox-group input[type="checkbox"]:hover:checked {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.7);
+        }
+
+        .checkbox-group label {
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            user-select: none;
+            letter-spacing: 0.3px;
         }
         
         .btn {
@@ -529,6 +1217,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .btn::before {
@@ -538,7 +1228,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             transition: left 0.5s;
         }
         
@@ -547,9 +1237,9 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
         }
         
         .btn-primary:hover {
@@ -612,7 +1302,59 @@
         
         .action-buttons {
             display: flex;
-            gap: 12px;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .action-buttons .btn {
+            min-width: 100px;
+            position: relative;
+        }
+
+        .action-buttons .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 0 1px rgba(16, 185, 129, 0.1);
+            border: none;
+        }
+
+        .action-buttons .btn-success:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .action-buttons .btn-success:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .action-buttons .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 0 1px rgba(239, 68, 68, 0.1);
+            border: none;
+        }
+
+        .action-buttons .btn-danger:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3);
+        }
+
+        .action-buttons .btn-danger:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .action-buttons .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none;
+        }
+
+        .action-buttons .btn.running {
+            animation: btn-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes btn-pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); }
+            50% { box-shadow: 0 4px 30px rgba(16, 185, 129, 0.8), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 20px rgba(16, 185, 129, 0.4); }
         }
         
         .btn-sm {
@@ -643,10 +1385,137 @@
             border: 1px solid rgba(245, 158, 11, 0.3);
             color: var(--warning);
         }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
         
         .alert .icon {
             font-size: 18px;
             flex-shrink: 0;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+            pointer-events: auto;
+            animation: toast-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: currentColor;
+            opacity: 0.8;
+        }
+
+        .toast.toast-info {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.08) 100%);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            color: #22d3ee;
+        }
+
+        .toast.toast-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .toast.toast-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.08) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+
+        .toast.toast-error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .toast .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast .toast-content {
+            flex: 1;
+        }
+
+        .toast .toast-close {
+            background: none;
+            border: none;
+            color: currentColor;
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .toast .toast-close:hover {
+            opacity: 1;
+        }
+
+        .toast.toast-exit {
+            animation: toast-slide-out 0.3s ease-in forwards;
+        }
+
+        @keyframes toast-slide-in {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toast-slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
         }
         
         .modal-overlay {
@@ -679,6 +1548,24 @@
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
         
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .modal::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .modal::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .modal::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
+        
         .modal h2 {
             margin-bottom: 24px;
             color: white;
@@ -709,8 +1596,10 @@
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 20px;
+            margin-top: 10px;
             backdrop-filter: blur(10px);
             transition: all 0.3s;
+            flex-shrink: 0;
         }
         
         .status-card:hover {
@@ -778,6 +1667,7 @@
     </style>
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
     <div class="particles">
         <div class="particle"></div>
         <div class="particle"></div>
@@ -804,6 +1694,10 @@
             <div class="menu-item" data-panel="personalize">
                 <span class="icon"><i class="fas fa-palette"></i></span>
                 <span>个性化设置</span>
+            </div>
+            <div class="menu-item" data-panel="help">
+                <span class="icon"><i class="fas fa-book"></i></span>
+                <span>使用说明</span>
             </div>
             <div class="menu-item" data-panel="dev">
                 <span class="icon"><i class="fas fa-wrench"></i></span>
@@ -848,6 +1742,7 @@
                         </div>
                     </div>
                     <div class="log-container">
+                        <div class="log-header">TERMINAL</div>
                         <div class="log-output" id="logOutput">
                             <div class="log-line"><span class="log-time">[系统]</span> 等待启动...</div>
                         </div>
@@ -905,14 +1800,7 @@
                                 <input type="checkbox" id="autoStart">
                                 <label>开机自动启动</label>
                             </div>
-                            <div class="hint">系统启动时自动运行程序</div>
-                        </div>
-                        <div class="form-group">
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="runHidden">
-                                <label>启动时隐藏窗口</label>
-                            </div>
-                            <div class="hint">启动时最小化到系统托盘</div>
+                            <div class="hint">系统启动时自动运行程序（自动后台运行）</div>
                         </div>
                         <div class="form-group">
                             <div class="checkbox-group">
@@ -922,13 +1810,20 @@
                             <div class="hint">点击关闭按钮时最小化而不是退出</div>
                         </div>
                         <div class="form-group">
-                            <label>检测间隔（秒）</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="number" id="intervalMin" min="30" max="600" placeholder="最小间隔">
-                                <input type="number" id="intervalMax" min="30" max="600" placeholder="最大间隔">
+                            <label>校园网不可用时间段（可选）</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="time" id="serviceDisableStart" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;  background: #333;">
+                                <span style="color: #fff;">至</span>
+                                <input type="time" id="serviceDisableEnd" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;  background: #333;">
                             </div>
-                            <div class="hint">每次检测之间等待的随机时间范围</div>
+                            <div class="hint">校园网服务不可用的时间段，填写后程序会自动等待恢复</div>
                         </div>
+                        <style>
+                            #serviceDisableStart::-webkit-calendar-picker-indicator,
+                            #serviceDisableEnd::-webkit-calendar-picker-indicator {
+                                filter: invert(1);
+                            }
+                        </style>
                         <div class="btn-group">
                             <button type="button" class="btn btn-primary" onclick="savePersonalize()">保存设置</button>
                         </div>
@@ -954,37 +1849,116 @@
                     </form>
                 </div>
                 
+                <div class="panel" id="panel-help">
+                    <h3><i class="fas fa-book-open"></i> 使用说明</h3>
+                    <div class="help-section">
+                        <span class="step-number">01</span>
+                        <h4><i class="fas fa-wifi"></i> 首次配置</h4>
+                        <ul>
+                            <li>打开「账号配置」页面，填写您的校园网账号和密码</li>
+                            <li>选择您的运营商（联通/移动/电信/校园网）</li>
+                            <li>填写 WiFi 名称（SSID），如校园网的 SSID</li>
+                            <li>选择无线网卡接口，可通过 <code>ipconfig</code> 查看</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <span class="step-number">02</span>
+                        <h4><i class="fas fa-rocket"></i> 启动服务</h4>
+                        <ul>
+                            <li>点击「启动」按钮开始自动连接服务</li>
+                            <li>程序会自动连接 WiFi 并完成校园网认证</li>
+                            <li>状态栏会实时显示连接进度和结果</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <span class="step-number">03</span>
+                        <h4><i class="fas fa-clock"></i> 定时任务</h4>
+                        <ul>
+                            <li>在「个性化设置」中可以设置服务自动停止时间段</li>
+                            <li>例如设置 23:00-06:00 停止服务，节省夜间流量</li>
+                            <li>服务暂停期间不会自动重连</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <span class="step-number">04</span>
+                        <h4><i class="fas fa-desktop"></i> 窗口管理</h4>
+                        <ul>
+                            <li>点击窗口关闭按钮时，可选择最小化到系统托盘</li>
+                            <li>托盘图标右键菜单可显示/隐藏窗口</li>
+                            <li>支持开机自启动（需在个性化设置中开启）</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <span class="step-number">05</span>
+                        <h4><i class="fas fa-exclamation-triangle"></i> 注意事项</h4>
+                        <ul>
+                            <li>本程序仅支持锐捷(Ruijie)校园网认证</li>
+                            <li>如遇认证失败，请检查账号密码是否正确</li>
+                            <li>确保无线网卡正常工作且已连接目标 WiFi</li>
+                            <li>日志区域可查看详细的连接和认证信息</li>
+                        </ul>
+                    </div>
+                </div>
+                
                 <div class="panel" id="panel-about">
-                    <h3>关于</h3>
-                    <div class="status-card">
-                        <h4>自动连接 - WiFi 校园网助手</h4>
-                        <div class="status-item">
-                            <span class="status-label">版本</span>
-                            <span class="status-value">1.0.0</span>
+                    <div class="about-header">
+                        <div class="about-logo">
+                            <i class="fas fa-wifi"></i>
                         </div>
-                        <div class="status-item">
-                            <span class="status-label">作者</span>
-                            <span class="status-value">Aurorp1g</span>
+                        <h3>Auto_Connect</h3>
+                        <p class="about-subtitle">WiFi 校园网助手</p>
+                    </div>
+                    
+                    <div class="about-card">
+                        <div class="about-stat">
+                            <span class="stat-value">1.0.0</span>
+                            <span class="stat-label">版本</span>
                         </div>
-                        <div class="status-item">
-                            <span class="status-label">GitHub</span>
-                            <span class="status-value">
-                                <a href="https://github.com/Aurorp1g/Auto_Connect" target="_blank" class="link">
-                                    <i class="fab fa-github"></i> Auto_Connect
-                                </a>
-                            </span>
+                        <div class="about-stat">
+                            <span class="stat-value">Aurorp1g</span>
+                            <span class="stat-label">作者</span>
                         </div>
-                        <div class="status-item">
-                            <span class="status-label">功能</span>
-                            <span class="status-value">WiFi 自动连接 + 校园网认证</span>
+                        <div class="about-stat">
+                            <span class="stat-value">MIT</span>
+                            <span class="stat-label">协议</span>
                         </div>
                     </div>
-                    <p style="color: #666; line-height: 1.8;">
-                        本程序可自动连接指定 WiFi 并完成校园网认证登录。<br>
-                        支持开机自启、后台静默运行等功能。
-                    </p>
+                    
+                    <div class="about-features">
+                        <div class="feature-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>自动连接</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>校园网认证</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-clock"></i>
+                            <span>定时任务</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-moon"></i>
+                            <span>后台运行</span>
+                        </div>
+                    </div>
+                    
+                    <div class="about-github">
+                        <a href="https://github.com/Aurorp1g/Auto_Connect" target="_blank" class="github-btn">
+                            <i class="fab fa-github"></i>
+                            <span>在 GitHub 上查看</span>
+                        </a>
+                    </div>
+                    
                     <div class="about-footer">
-                        <p>© 2024 Auto_Connect. All rights reserved.</p>
+                        <div class="footer-glow"></div>
+                        <p>© 2026 Auto_Connect. All rights reserved.</p>
+                        <p class="footer-tech">
+                            <img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python">
+                            <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5">
+                            <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript">
+                            <img src="https://img.shields.io/badge/Chromium-4285F4?style=flat&logo=google-chrome&logoColor=white" alt="Chromium">
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1059,10 +2033,11 @@
             
             const now = new Date();
             const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const typeLabel = (msg_type || 'info').toUpperCase();
             
             const logLine = document.createElement('div');
             logLine.className = 'log-line';
-            logLine.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="log-${msg_type}">${message}</span>`;
+            logLine.innerHTML = `<span class="log-time">${timeStr}</span><span class="log-type ${msg_type || 'info'}">${typeLabel}</span><span class="log-${msg_type || 'info'}">${message}</span>`;
             
             logOutput.appendChild(logLine);
             logOutput.scrollTop = logOutput.scrollHeight;
@@ -1116,11 +2091,43 @@
         function addLog(message, type = 'info') {
             const logOutput = document.getElementById('logOutput');
             const time = new Date().toLocaleTimeString();
+            const typeLabel = type.toUpperCase();
             const className = type === 'error' ? 'log-error' : 
                              type === 'success' ? 'log-success' : 
+                             type === 'warning' ? 'log-warning' :
                              type === 'info' ? 'log-info' : '';
-            logOutput.innerHTML += `<div class="log-line"><span class="log-time">[${time}]</span> <span class="${className}">${message}</span></div>`;
+            logOutput.innerHTML += `<div class="log-line"><span class="log-time">${time}</span><span class="log-type ${type}">${typeLabel}</span><span class="${className}">${message}</span></div>`;
             logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icons = {
+                info: 'fa-circle-info',
+                success: 'fa-circle-check',
+                warning: 'fa-triangle-exclamation',
+                error: 'fa-circle-xmark'
+            };
+            
+            toast.innerHTML = `
+                <i class="toast-icon fas ${icons[type] || icons.info}"></i>
+                <span class="toast-content">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
         }
         
         function updateStatus() {
@@ -1136,11 +2143,13 @@
                         statusDot.className = 'status-dot running';
                         statusText.textContent = '运行中';
                         document.getElementById('startBtn').disabled = true;
+                        document.getElementById('startBtn').classList.add('running');
                         document.getElementById('stopBtn').disabled = false;
                     } else {
                         statusDot.className = 'status-dot stopped';
                         statusText.textContent = '已停止';
                         document.getElementById('startBtn').disabled = false;
+                        document.getElementById('startBtn').classList.remove('running');
                         document.getElementById('stopBtn').disabled = true;
                     }
                     
@@ -1160,6 +2169,7 @@
             if (window.eel) {
                 window.eel.start_service()();
                 addLog('服务已启动', 'success');
+                showToast('服务已启动', 'success');
                 isRunning = true;
                 updateStatus();
             }
@@ -1169,6 +2179,7 @@
             if (window.eel) {
                 window.eel.stop_service()();
                 addLog('服务已停止', 'info');
+                showToast('服务已停止', 'info');
                 isRunning = false;
                 updateStatus();
             }
@@ -1191,10 +2202,9 @@
                     document.getElementById('frIndexUrl').value = config.index_url || '';
                     
                     document.getElementById('autoStart').checked = config.auto_start || false;
-                    document.getElementById('runHidden').checked = config.run_hidden || false;
-                    document.getElementById('minimizeToTray').checked = config.minimize_to_tray !== false;
-                    document.getElementById('intervalMin').value = config.interval_min || 60;
-                    document.getElementById('intervalMax').value = config.interval_max || 80;
+                    document.getElementById('minimizeToTray').checked = config.minimize_to_tray || false;
+                    document.getElementById('serviceDisableStart').value = config.service_disable_start || '';
+                    document.getElementById('serviceDisableEnd').value = config.service_disable_end || '';
                     
                     if (config.first_run) {
                         document.getElementById('firstRunModal').classList.add('show');
@@ -1218,9 +2228,11 @@
                     window.eel.save_config(config)(function(result) {
                         if (result.success) {
                             addLog('配置已保存', 'success');
+                            showToast('配置已保存', 'success');
                             resolve(true);
                         } else {
                             addLog('配置保存失败: ' + result.error, 'error');
+                            showToast('配置保存失败', 'error');
                             reject(result.error);
                         }
                     });
@@ -1235,24 +2247,26 @@
                 generatePostData();
             }).catch(function(error) {
                 addLog('保存配置失败: ' + error, 'error');
+                showToast('保存配置失败', 'error');
             });
         }
         
         function savePersonalize() {
             const config = {
                 auto_start: document.getElementById('autoStart').checked,
-                run_hidden: document.getElementById('runHidden').checked,
                 minimize_to_tray: document.getElementById('minimizeToTray').checked,
-                interval_min: parseInt(document.getElementById('intervalMin').value) || 60,
-                interval_max: parseInt(document.getElementById('intervalMax').value) || 80
+                service_disable_start: document.getElementById('serviceDisableStart').value || '',
+                service_disable_end: document.getElementById('serviceDisableEnd').value || ''
             };
             
             if (window.eel) {
                 window.eel.save_personalize(config)(function(result) {
                     if (result.success) {
                         addLog('个性化设置已保存', 'success');
+                        showToast('个性化设置已保存', 'success');
                     } else {
                         addLog('设置保存失败: ' + result.error, 'error');
+                        showToast('设置保存失败', 'error');
                     }
                 });
             }
@@ -1264,8 +2278,10 @@
                 window.eel.generate_post_data_py()(function(result) {
                     if (result.success) {
                         addLog('认证数据生成成功', 'success');
+                        showToast('认证数据生成成功', 'success');
                     } else {
                         addLog('认证数据生成失败: ' + result.error, 'error');
+                        showToast('认证数据生成失败', 'error');
                     }
                 });
             } else {
@@ -1278,6 +2294,7 @@
                 window.eel.load_raw_config()(function(config) {
                     document.getElementById('devConfigJson').value = JSON.stringify(config, null, 4);
                     addLog('配置已重新加载', 'info');
+                    showToast('配置已重新加载', 'info');
                 });
             }
         }
@@ -1290,6 +2307,7 @@
                     window.eel.save_raw_config(config)(function(result) {
                         if (result.success) {
                             addLog('开发配置已保存', 'success');
+                            showToast('开发配置已保存', 'success');
                             generatePostData();
                         } else {
                             addLog('保存失败: ' + result.error, 'error');
@@ -1329,6 +2347,7 @@
                         loadConfig();
                         generatePostData();
                         addLog('首次配置完成', 'success');
+                        showToast('首次配置完成，欢迎使用！', 'success');
                     }
                 });
             }
@@ -1340,6 +2359,13 @@
         
         loadConfig();
         loadDevConfig();
+        
+        if (window.eel) {
+            window.eel.on_backend_sleep = function(seconds) {
+                addLog('后端进入休眠状态，' + (seconds/60) + '分钟后恢复', 'warning');
+            };
+        }
+        
         setInterval(updateStatus, 2000);
     </script>
 </body>

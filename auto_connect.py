@@ -6,10 +6,13 @@ GUI 应用主程序
 
 import eel
 import os
+import socket
 import sys
 import threading
 import time
 import subprocess
+import urllib.request
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 import browser.custom_chrome
@@ -34,7 +37,17 @@ def get_project_root():
 
 service_thread = None
 service_running = False
-interrupted = False
+handling = False
+
+chrome_process = None
+browser_visible = False
+browser_hiding = False  # True 表示正在隐藏浏览器（不退出程序）
+tray_icon = None  # 托盘图标对象
+app_initialized = False  # 应用是否已初始化
+
+failed_count = 0
+MAX_FAILED_COUNT = 5
+SLEEP_DURATION = 1800  # 30分钟
 
 def setup_log_file():
     """确保日志文件存在"""
@@ -76,10 +89,17 @@ def generate_post_data():
     result = {'success': False, 'error': ''}
     
     try:
+        startupinfo = None
+        if sys.platform == 'win32':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+        
         node_available = subprocess.run(
             ['node', '--version'],
             capture_output=True,
-            timeout=5
+            timeout=5,
+            startupinfo=startupinfo
         )
         
         if node_available.returncode == 0:
@@ -88,7 +108,8 @@ def generate_post_data():
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=get_common_config()["post_dir"]
+                cwd=get_common_config()["post_dir"],
+                startupinfo=startupinfo
             )
             
             if body_result.returncode != 0:
@@ -100,7 +121,8 @@ def generate_post_data():
                 capture_output=True,
                 text=True,
                 timeout=30,
-                cwd=get_common_config()["post_dir"]
+                cwd=get_common_config()["post_dir"],
+                startupinfo=startupinfo
             )
             
             if header_result.returncode == 0:
@@ -132,47 +154,52 @@ def auto_login():
     )
 
 
-def service_worker():
-    """后台服务工作线程"""
-    global service_running, interrupted
+def handle_status_change_inner(wifi_connected: bool, network_ok: bool):
+    """处理状态变化的内层函数（只有状态改变才推送）"""
+    global last_wifi_status, last_network_status
+    
+    wifi_changed = wifi_connected != last_wifi_status
+    network_changed = network_ok != last_network_status
+    
+    last_wifi_status = wifi_connected
+    last_network_status = network_ok
     
     wifi_config = get_wifi_config()
     target_ssid = wifi_config.get('target_ssid', '')
-    personalize = get_personalize_config()
-    interval_min = personalize.get('check_interval_min', 60)
-    interval_max = personalize.get('check_interval_max', 80)
-    
-    push_log_to_front(f'自动连接程序启动，目标 WiFi: {target_ssid}', 'info')
-    
-    while service_running:
-        interrupted = False
-        
-        if is_connected(target_ssid):
-            push_log_to_front(f'已连接到 [{target_ssid}]', 'success')
+
+
+    if network_ok:
+        if network_changed:
+            push_log_to_front('网络已连接', 'success')
             try:
                 eel.update_status_py({
-                    'wifi_connected': True,
+                    'network_ok': True,
+                    'campus_logged': True,
                     'running': True
                 })
             except:
                 pass
-            
-            if check_network():
-                push_log_to_front('网络已连接', 'success')
-                try:
-                    eel.update_status_py({
-                        'network_ok': True,
-                        'campus_logged': True,
-                        'running': True
-                    })
-                except:
-                    pass
+    else:
+        if wifi_connected:
+            if network_ok:
+                if network_changed:
+                    push_log_to_front('网络已连接', 'success')
+                    try:
+                        eel.update_status_py({
+                            'network_ok': True,
+                            'campus_logged': True,
+                            'running': True
+                        })
+                    except:
+                        pass
             else:
-                push_log_to_front('WiFi 已连接但网络不可用，尝试校园网认证...', 'info')
-                try:
-                    eel.update_status_py({'network_ok': False})
-                except:
-                    pass
+                if network_changed:
+                    push_log_to_front('WiFi 已连接但网络不可用，尝试校园网认证...', 'info')
+                    try:
+                        eel.update_status_py({'network_ok': False})
+                    except:
+                        pass
+                
                 login_success, error_msg = auto_login()
                 
                 if login_success:
@@ -181,72 +208,133 @@ def service_worker():
                         eel.update_status_py({'campus_logged': True, 'network_ok': True})
                     except:
                         pass
+                    last_network_status = True
+                    
+                    time.sleep(2)
+                    network_still_ok = False
+                    try:
+                        with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
+                            network_still_ok = response.status == 204
+                    except:
+                        pass
+                    
+                    if not network_still_ok:
+                        push_log_to_front('认证成功但网络仍不可用，可能是服务已终止', 'warning')
+                        last_network_status = False
                 else:
                     if error_msg and any(s in error_msg for s in ['10051', '套接字', 'socket']):
-                        push_log_to_front('网络连接存在问题，休眠1小时后重试...', 'warning')
-                        log_message('网络连接存在问题，休眠1小时后重试...', 'warning')
-                        for _ in range(3600):
-                            if not service_running:
-                                break
-                            time.sleep(1)
-                        continue
+                        push_log_to_front('网络连接存在问题', 'warning')
+                    push_log_to_front(f'校园网认证失败: {error_msg or "状态码不匹配"}', 'error')
         else:
-            push_log_to_front(f'未连接到 [{target_ssid}]，正在检测网络...', 'info')
-            try:
-                eel.update_status_py({'wifi_connected': False})
-            except:
-                pass
+            if wifi_changed:
+                push_log_to_front(f'未连接到 [{target_ssid}]', 'info')
+                try:
+                    eel.update_status_py({'wifi_connected': False})
+                except:
+                    pass
             
-            if check_network():
-                push_log_to_front('网络正常，保持当前状态', 'success')
-                try:
-                    eel.update_status_py({'network_ok': True})
-                except:
-                    pass
-            else:
-                push_log_to_front('网络不可用，尝试连接 WiFi...', 'info')
-                try:
-                    eel.update_status_py({'network_ok': False})
-                except:
-                    pass
+            if ensure_wifi_connected():
+                push_log_to_front(f'WiFi [{target_ssid}] 连接命令已发送', 'info')
+                time.sleep(3)
                 
-                if ensure_wifi_connected():
-                    push_log_to_front(f'WiFi [{target_ssid}] 连接命令已发送', 'info')
-                    time.sleep(3)
-                    
-                    if check_network():
-                        push_log_to_front('WiFi 已连接，网络正常', 'success')
+                if check_network():
+                    push_log_to_front('WiFi 已连接，网络正常', 'success')
+                    try:
+                        eel.update_status_py({'network_ok': True, 'wifi_connected': True, 'campus_logged': True})
+                    except:
+                        pass
+                    last_wifi_status = True
+                    last_network_status = True
+                else:
+                    push_log_to_front('WiFi 已连接但需要校园网认证...', 'info')
+                    login_success, error_msg = auto_login()
+                    if login_success:
+                        push_log_to_front('校园网认证成功', 'success')
                         try:
-                            eel.update_status_py({'network_ok': True, 'wifi_connected': True, 'campus_logged': True})
+                            eel.update_status_py({'campus_logged': True, 'wifi_connected': True})
                         except:
                             pass
-                    else:
-                        push_log_to_front('WiFi 已连接但需要校园网认证...', 'info')
-                        login_success, error_msg = auto_login()
-                        if login_success:
-                            push_log_to_front('校园网认证成功', 'success')
-                            try:
-                                eel.update_status_py({'campus_logged': True, 'wifi_connected': True})
-                            except:
-                                pass
+                        last_wifi_status = True
+                        
+                        time.sleep(2)
+                        network_still_ok = False
+                        try:
+                            with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
+                                network_still_ok = response.status == 204
+                        except:
+                            pass
+                        
+                        if network_still_ok:
+                            last_network_status = True
+                            push_log_to_front('网络已连通', 'success')
                         else:
-                            if error_msg and any(s in error_msg for s in ['10051', '套接字', 'socket']):
-                                push_log_to_front('网络连接存在问题，休眠1小时后重试...', 'warning')
-                                for _ in range(3600):
-                                    if not service_running:
-                                        break
-                                    time.sleep(1)
-                                continue
-                            push_log_to_front(f'校园网认证失败: {error_msg or "状态码不匹配"}', 'error')
-                else:
-                    push_log_to_front('WiFi 连接失败', 'error')
+                            push_log_to_front('认证成功但网络仍不可用，可能是服务已终止', 'warning')
+                    else:
+                        push_log_to_front(f'校园网认证失败: {error_msg or "状态码不匹配"}', 'error')
+            else:
+                push_log_to_front('WiFi 连接失败', 'error')
+
+
+def handle_status_change():
+    """处理状态变化（兼容性保留）"""
+    handle_status_change_inner(last_wifi_status, last_network_status)
+
+
+def service_worker():
+    """后台服务工作线程 - 自主轮询检测网络状态"""
+    global service_running, failed_count, last_network_status
+    
+    wifi_config = get_wifi_config()
+    target_ssid = wifi_config.get('target_ssid', '')
+    
+    push_log_to_front(f'自动连接程序启动，目标 WiFi: {target_ssid}', 'info')
+    push_log_to_front('服务已启动，开始监控网络状态...', 'info')
+    
+    CHECK_INTERVAL = 2  # 每2秒检测一次
+    
+    while service_running:
+        network_ok = False
+        try:
+            with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
+                network_ok = response.status == 204
+        except:
+            pass
         
-        rand = time.time() % (interval_max - interval_min)
-        sleep_time = interval_min + rand
+        if network_ok:
+            if not last_network_status:
+                push_log_to_front('网络已连接', 'success')
+                try:
+                    eel.update_status_py({'network_ok': True, 'campus_logged': True})
+                except:
+                    pass
+            last_network_status = True
+            failed_count = 0
+        else:
+            wifi_connected = is_connected(target_ssid)
+            handle_status_change_inner(wifi_connected, network_ok)
+            
+            if last_wifi_status and last_network_status:
+                failed_count = 0
+            else:
+                failed_count += 1
+                if failed_count >= MAX_FAILED_COUNT:
+                    sleep_duration = calculate_sleep_duration()
+                    sleep_minutes = sleep_duration // 60
+                    push_log_to_front(f'连续{MAX_FAILED_COUNT}次处理失败，休眠{sleep_minutes}分钟后重试...', 'warning')
+                    try:
+                        eel.on_backend_sleep(sleep_duration)
+                    except:
+                        pass
+                    
+                    for _ in range(sleep_duration):
+                        if not service_running:
+                            break
+                        time.sleep(1)
+                    
+                    failed_count = 0
+                    push_log_to_front('休眠结束，重新开始工作...', 'info')
         
-        push_log_to_front(f'休眠 {int(sleep_time)} 秒后再次检测', 'info')
-        
-        for _ in range(int(sleep_time)):
+        for _ in range(CHECK_INTERVAL):
             if not service_running:
                 break
             time.sleep(1)
@@ -257,20 +345,59 @@ def service_worker():
         pass
 
 
+def calculate_sleep_duration():
+    """计算休眠时长（考虑服务禁用时间段）"""
+    personalize = get_personalize_config()
+    disable_start = personalize.get('service_disable_start', '')
+    disable_end = personalize.get('service_disable_end', '')
+    
+    if not disable_start or not disable_end:
+        return SLEEP_DURATION
+    
+    try:
+        now = datetime.now()
+        current_time = now.time()
+        
+        start_time = datetime.strptime(disable_start, '%H:%M').time()
+        end_time = datetime.strptime(disable_end, '%H:%M').time()
+        
+        if start_time <= end_time:
+            in_range = start_time <= current_time <= end_time
+        else:
+            in_range = current_time >= start_time or current_time <= end_time
+        
+        if in_range:
+            if current_time < end_time:
+                end_datetime = datetime.combine(now.date(), end_time)
+            else:
+                end_datetime = datetime.combine(now.date() + timedelta(days=1), end_time)
+            
+            sleep_seconds = int((end_datetime - now).total_seconds())
+            return max(sleep_seconds, 60)
+        else:
+            return SLEEP_DURATION
+            
+    except Exception:
+        return SLEEP_DURATION
+
+
 @eel.expose
 def init_app():
     """初始化应用"""
+    global app_initialized
     setup_log_file()
     
-    if is_first_run():
-        try:
-            eel.display_first_run()
-        except:
-            pass
-    else:
-        personalize = get_personalize_config()
-        if personalize.get('auto_start') and personalize.get('run_hidden'):
-            start_service()
+    if not app_initialized:
+        app_initialized = True
+        if is_first_run():
+            try:
+                eel.display_first_run()
+            except:
+                pass
+        else:
+            personalize = get_personalize_config()
+            if personalize.get('auto_start'):
+                start_service()
 
 
 def push_log_to_front(message: str, msg_type: str = 'info'):
@@ -304,12 +431,18 @@ def stop_service():
 
 @eel.expose
 def get_status():
-    """获取当前状态"""
+    """获取当前状态（轻量级检测）"""
     wifi_config = get_wifi_config()
     target_ssid = wifi_config.get('target_ssid', '')
     
     wifi_ok = is_connected(target_ssid)
-    network_ok = check_network()
+    
+    network_ok = False
+    try:
+        with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
+            network_ok = response.status == 204
+    except:
+        pass
     
     return {
         'running': service_running,
@@ -318,6 +451,9 @@ def get_status():
         'campus_logged': wifi_ok and network_ok
     }
 
+
+last_wifi_status = False
+last_network_status = False
 
 @eel.expose
 def load_config_for_gui():
@@ -334,10 +470,9 @@ def load_config_for_gui():
         'wifi_interface': wifi.get('interface_name', ''),
         'index_url': config.get('index_url', ''),
         'auto_start': personalize.get('auto_start', False),
-        'run_hidden': personalize.get('run_hidden', False),
-        'minimize_to_tray': personalize.get('minimize_to_tray', True),
-        'interval_min': personalize.get('check_interval_min', 60),
-        'interval_max': personalize.get('check_interval_max', 80),
+        'minimize_to_tray': personalize.get('minimize_to_tray', False),
+        'service_disable_start': personalize.get('service_disable_start', ''),
+        'service_disable_end': personalize.get('service_disable_end', ''),
         'first_run': config.get('first_run', True)
     }
 
@@ -411,10 +546,9 @@ def save_personalize(config_data):
         
         config['personalize'] = {
             'auto_start': config_data.get('auto_start', False),
-            'run_hidden': config_data.get('run_hidden', False),
-            'minimize_to_tray': config_data.get('minimize_to_tray', True),
-            'check_interval_min': config_data.get('interval_min', 60),
-            'check_interval_max': config_data.get('interval_max', 80)
+            'minimize_to_tray': config_data.get('minimize_to_tray', False),
+            'service_disable_start': config_data.get('service_disable_start', ''),
+            'service_disable_end': config_data.get('service_disable_end', '')
         }
         
         core_save_config(config)
@@ -423,6 +557,10 @@ def save_personalize(config_data):
         
         if not auto_start_result:
             return {'success': False, 'error': '设置开机自启动失败'}
+        
+        # 如果开启了最小化到托盘但托盘还没创建，则创建托盘
+        if config['personalize'].get('minimize_to_tray') and tray_icon is None:
+            threading.Thread(target=setup_system_tray, daemon=True).start()
         
         return {'success': True}
     except Exception as e:
@@ -458,8 +596,9 @@ def setup_auto_start(enable):
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE | winreg.KEY_QUERY_VALUE)
         
         if enable:
-            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, app_path)
-            log_message(f"已添加注册表项: {app_name} -> {app_path}")
+            app_path_with_args = f'"{app_path}" --hidden'
+            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, app_path_with_args)
+            log_message(f"已添加注册表项: {app_name} -> {app_path_with_args}")
             
             try:
                 verify_value, _ = winreg.QueryValueEx(key, app_name)
@@ -488,34 +627,188 @@ def setup_auto_start(enable):
     return success
 
 
+def launch_browser():
+    """启动浏览器窗口"""
+    global chrome_process, browser_visible
+    
+    if chrome_process is None or chrome_process.poll() is not None:
+        chrome_process = browser.custom_chrome.start_chrome_for_eel(port=8888, hidden=False)
+        browser_visible = True
+        log_message('浏览器窗口已启动', 'info')
+        return True
+    return False
+
+
+def refresh_tray_menu():
+    """刷新托盘菜单"""
+    global tray_icon, browser_visible
+    
+    if tray_icon is None:
+        return
+    
+    try:
+        import pystray
+        
+        def do_show(icon, item):
+            global browser_visible
+            if launch_browser():
+                browser_visible = True
+                icon.menu = get_tray_menu()
+        
+        def do_hide(icon, item):
+            global browser_visible
+            hide_browser()
+            browser_visible = False
+            icon.menu = get_tray_menu()
+        
+        def do_exit(icon, item):
+            global service_running, chrome_process
+            service_running = False
+            if chrome_process is not None:
+                chrome_process.terminate()
+                chrome_process = None
+            try:
+                eel.stop()
+            except:
+                pass
+            icon.stop()
+            import os
+            os._exit(0)
+        
+        tray_icon.menu = get_tray_menu()
+    except Exception as e:
+        log_message(f'刷新托盘菜单失败: {e}', 'error')
+
+
+def get_tray_menu():
+    """获取托盘菜单"""
+    import pystray
+    
+    def do_show(icon, item):
+        global browser_visible
+        if launch_browser():
+            browser_visible = True
+            icon.menu = get_tray_menu()
+
+    def do_hide(icon, item):
+        global browser_visible
+        hide_browser()
+        browser_visible = False
+        icon.menu = get_tray_menu()
+
+    def do_exit(icon, item):
+        global service_running, chrome_process
+        service_running = False
+        if chrome_process is not None:
+            chrome_process.terminate()
+            chrome_process = None
+        try:
+            eel.stop()
+        except:
+            pass
+        icon.stop()
+        import os
+        os._exit(0)
+    
+    return pystray.Menu(
+        pystray.MenuItem('显示窗口', do_show, visible=not browser_visible),
+        pystray.MenuItem('隐藏窗口', do_hide, visible=browser_visible),
+        pystray.MenuItem('退出', do_exit)
+    )
+
+
+def hide_browser():
+    """隐藏浏览器窗口"""
+    global chrome_process, browser_visible, browser_hiding
+    
+    browser_hiding = True
+    
+    if chrome_process is not None:
+        chrome_process.terminate()
+        chrome_process = None
+        time.sleep(0.5)
+    
+    browser_visible = False
+    browser_hiding = False
+    log_message('浏览器窗口已隐藏', 'info')
+
+
 def run_gui():
     """运行 GUI 应用"""
     gui_path = os.path.join(get_project_root(), 'gui')
     
     eel.init(gui_path, ['.html', '.js', '.css'])
     
-    personalize = get_personalize_config()
-    run_hidden = personalize.get('run_hidden', False)
-    minimize_to_tray = personalize.get('minimize_to_tray', True)
+    hidden_mode = '--hidden' in sys.argv
     
-    if run_hidden:
-        import ctypes
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+    init_app()
+    
+    def browser_close_callback(page, sockets):
+        """浏览器关闭时的回调"""
+        global browser_hiding, chrome_process, browser_visible, tray_icon
+        
+        if browser_hiding:
+            return
+        
+        personalize = get_personalize_config()
+        minimize_to_tray = personalize.get('minimize_to_tray', False)
+        
+        if minimize_to_tray:
+            browser_hiding = True
+            if chrome_process is not None:
+                chrome_process.terminate()
+                chrome_process = None
+            browser_visible = False
+            refresh_tray_menu()
+            time.sleep(0.5)
+            browser_hiding = False
+            return
+        
+        import os
+        os._exit(0)
+    
+    icon_path = os.path.join(get_project_root(), 'gui', 'favicon.ico')
+    cmdline_args = ['--disable-http-cache']
+    if os.path.exists(icon_path):
+        cmdline_args.append('--icon=' + icon_path)
     
     eel.start('index.html', 
                block=False,
                mode=False,
                size=(1200, 750),
-               port=8888)
+               port=8888,
+               close_callback=browser_close_callback,
+               cmdline_args=cmdline_args)
     
-    time.sleep(1)
-    browser.custom_chrome.start_chrome_for_eel(port=8888)
+    personalize = get_personalize_config()
+    minimize_to_tray = personalize.get('minimize_to_tray', False)
     
-    if minimize_to_tray:
+    # hidden 模式始终创建托盘，非 hidden 模式根据设置决定
+    if hidden_mode or minimize_to_tray:
         threading.Thread(target=setup_system_tray, daemon=True).start()
     
+    if not hidden_mode:
+        launch_browser()
+    
     while True:
-        eel.sleep(1)
+        try:
+            eel.sleep(1)
+        except KeyboardInterrupt:
+            break
+        except SystemExit:
+            continue
+        except Exception:
+            pass
+        
+        try:
+            global chrome_process
+            if chrome_process is not None:
+                if chrome_process.poll() is not None:
+                    chrome_process = None
+                    global browser_visible
+                    browser_visible = False
+        except Exception:
+            pass
 
 
 def setup_system_tray():
@@ -525,45 +818,36 @@ def setup_system_tray():
         from PIL import Image, ImageDraw
         
         def create_image():
-            width = 64
-            height = 64
-            image = Image.new('RGB', (width, height), color='#667eea')
+            favicon_path = os.path.join(get_project_root(), 'gui', 'favicon.ico')
+            if os.path.exists(favicon_path):
+                return Image.open(favicon_path).resize((64, 64))
+            image = Image.new('RGB', (64, 64), color='#667eea')
             dc = ImageDraw.Draw(image)
             dc.rectangle([16, 16, 48, 48], fill='white')
             dc.ellipse([24, 24, 40, 40], fill='#667eea')
             return image
         
-        def show_window(icon, item):
-            try:
-                eel.show_window()
-            except:
-                pass
-        
-        def exit_app(icon, item):
-            global service_running
-            service_running = False
-            try:
-                eel.stop_gui()
-            except:
-                pass
-            icon.stop()
-        
-        menu = pystray.Menu(
-            pystray.MenuItem('显示窗口', show_window),
-            pystray.MenuItem('退出', exit_app)
-        )
-        
-        icon = pystray.Icon(
+        global tray_icon
+        tray_icon = pystray.Icon(
             'AutoConnect',
             create_image(),
             '自动连接 - WiFi 校园网助手',
-            menu
+            get_tray_menu()
         )
         
-        icon.run()
+        tray_icon.run()
     except Exception as e:
         log_message(f'托盘功能启动失败: {e}', 'error')
 
 
 if __name__ == "__main__":
-    run_gui()
+    # 检查是否已有实例在运行
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex(('localhost', 8888))
+    sock.close()
+    
+    if result == 0:
+        # 端口已被占用，说明程序已在运行
+        print("程序已在运行")
+    else:
+        run_gui()

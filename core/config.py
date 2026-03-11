@@ -6,13 +6,21 @@
 
 import os
 import json
+import sys
 from urllib.parse import urlparse
+
+
+def get_project_root():
+    """获取项目根目录（支持打包后运行）"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_config_path() -> str:
     """获取配置文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
+        get_project_root(),
         "data",
         "config.json"
     )
@@ -67,10 +75,9 @@ def get_personalize_config() -> dict:
     personalize = config.get("personalize", {})
     return {
         "auto_start": personalize.get("auto_start", False),
-        "run_hidden": personalize.get("run_hidden", False),
-        "minimize_to_tray": personalize.get("minimize_to_tray", True),
-        "check_interval_min": personalize.get("check_interval_min", 60),
-        "check_interval_max": personalize.get("check_interval_max", 80),
+        "minimize_to_tray": personalize.get("minimize_to_tray", False),
+        "service_disable_start": personalize.get("service_disable_start", ""),
+        "service_disable_end": personalize.get("service_disable_end", ""),
     }
 
 
@@ -112,12 +119,9 @@ def get_network_check_config() -> dict:
 
 def get_common_config() -> dict:
     """获取通用配置"""
-    personalize = get_personalize_config()
     return {
         "command_timeout": 10,
         "connect_timeout": 20,
-        "check_interval_min": personalize.get("check_interval_min", 60),
-        "check_interval_max": personalize.get("check_interval_max", 80),
         "log_file": "./logs/auto_connect.log",
         "data_dir": "data",
         "post_dir": "post"
@@ -144,8 +148,8 @@ def get_default_post_url() -> str:
 def get_post_header_path() -> str:
     """获取请求头文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
-        COMMON_CONFIG["data_dir"], 
+        get_project_root(),
+        COMMON_CONFIG["data_dir"],
         "post_header.json"
     )
 
@@ -153,8 +157,8 @@ def get_post_header_path() -> str:
 def get_post_data_path() -> str:
     """获取请求数据文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
-        COMMON_CONFIG["data_dir"], 
+        get_project_root(),
+        COMMON_CONFIG["data_dir"],
         "post_data.json"
     )
 
@@ -162,15 +166,15 @@ def get_post_data_path() -> str:
 def get_log_file_path() -> str:
     """获取日志文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
+        get_project_root(),
         COMMON_CONFIG["log_file"]
     )
 
 def get_post_header_js_path() -> str:
     """获取请求头 JavaScript 文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
-        COMMON_CONFIG["post_dir"], 
+        get_project_root(),
+        COMMON_CONFIG["post_dir"],
         "header.js"
     )
 
@@ -178,8 +182,8 @@ def get_post_header_js_path() -> str:
 def get_post_data_js_path() -> str:
     """获取请求数据 JavaScript 文件路径"""
     return os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 
-        COMMON_CONFIG["post_dir"], 
+        get_project_root(),
+        COMMON_CONFIG["post_dir"],
         "body.js"
     )
 
