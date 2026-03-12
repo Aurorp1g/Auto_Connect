@@ -7,7 +7,7 @@
 - **WiFi 自动连接** - 自动连接到指定校园WiFi热点
 - **校园网自动认证** - 支持 DRCOM、JLGC 等多种校园网认证方式
 - **智能重连机制** - 网络断开后自动检测并重新连接
-- **内置浏览器界面** - 采用便携版 Chromium 提供图形界面
+- **内置浏览器界面** - 采用便携版 Chromium 提供图形界面（可选）
 - **系统托盘运行** - 最小化到系统托盘，后台稳定运行
 - **日志记录** - 完整的运行日志记录功能
 
@@ -17,7 +17,7 @@
 - **Eel** - Python Web GUI 框架
 - **PyInstaller** - 程序打包
 - **pystray** - 系统托盘支持
-- **Chromium** - 便携版浏览器（内置）
+- **Chromium** - 便携版浏览器（可选，内置）
 
 ## 项目结构
 
@@ -30,9 +30,10 @@ Auto_Connect/
 │   └── wifi_manager.py     # WiFi 连接管理
 ├── browser/                # 浏览器模块
 │   └── custom_chrome.py    # 内置 Chrome 启动器
-├── chromium/               # 便携版 Chromium
-│   ├── chrome.exe
-│   └── user_data/          # 用户数据目录
+├── chromium/               # 便携版 Chromium（可选）
+│   └── chrome.exe
+├── gui/                    # 前端资源
+├── post/                   # 登录认证脚本
 ├── build/                  # 构建输出
 │   └── Auto_Connect/       # 打包后的可执行文件
 ├── requirements.txt        # Python 依赖
@@ -44,6 +45,41 @@ Auto_Connect/
 - Windows 10/11 系统
 - Python 3.8+
 - Node.js（用于RSA加密认证）
+- **Chromium 125.0.6422.113**（可选，用于内置浏览器界面）
+
+## Chromium 安装（可选）
+
+本项目的 `chromium` 目录默认已被 `.gitignore` 忽略，如需使用内置浏览器界面，请手动下载并放置：
+
+### 必需文件
+
+下载 Chromium 便携版（版本：**125.0.6422.113**），将以下文件放入 `chromium/` 目录：
+
+```
+chromium/
+├── chrome.exe              # 主程序
+├── chrome.dll
+├── chrome_elf.dll
+├── d3dcompiler_47.dll
+├── dxcompiler.dll
+├── dxil.dll
+├── icudtl.dat
+├── libEGL.dll
+├── libGLESv2.dll
+├── resources.pak
+└── ...（其他依赖文件）
+```
+
+### 下载地址
+
+- [Chromium Browser Downloads](https://chromium.cypress.io/)
+- 或自行搜索 `Chromium 125.0.6422.113 portable`
+
+### 注意事项
+
+- 若未放置 Chromium，程序启动时会自动使用系统默认浏览器
+- 终端会显示提示信息引导下载安装
+- 使用内置 Chromium 可获得更好的界面体验和离线运行能力
 
 ## 安装依赖
 
