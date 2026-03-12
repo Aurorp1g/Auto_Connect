@@ -79,36 +79,61 @@
         }
         
         .particles {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             overflow: hidden;
             pointer-events: none;
-            z-index: 0;
+            z-index: 99999;
         }
         
         .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
+            width: 8px;
+            height: 8px;
             background: var(--accent);
             border-radius: 50%;
-            opacity: 0.3;
-            animation: float 15s infinite;
+            opacity: 0.5;
+            animation: float 15s infinite backwards;
+            box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent), 0 0 45px var(--accent);
         }
         
-        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { left: 20%; animation-delay: 2s; width: 6px; height: 6px; }
-        .particle:nth-child(3) { left: 30%; animation-delay: 4s; }
-        .particle:nth-child(4) { left: 40%; animation-delay: 1s; width: 3px; height: 3px; }
-        .particle:nth-child(5) { left: 50%; animation-delay: 3s; }
-        .particle:nth-child(6) { left: 60%; animation-delay: 5s; width: 5px; height: 5px; }
-        .particle:nth-child(7) { left: 70%; animation-delay: 2.5s; }
-        .particle:nth-child(8) { left: 80%; animation-delay: 1.5s; width: 4px; height: 4px; }
-        .particle:nth-child(9) { left: 90%; animation-delay: 4.5s; }
-        .particle:nth-child(10) { left: 15%; animation-delay: 3.5s; width: 2px; height: 2px; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; width: 10px; height: 10px; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; width: 16px; height: 16px; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; width: 8px; height: 8px; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 1s; width: 14px; height: 14px; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 3s; width: 20px; height: 20px; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; width: 12px; height: 12px; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 2.5s; width: 18px; height: 18px; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 1.5s; width: 8px; height: 8px; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 4.5s; width: 18px; height: 18px; }
+        .particle:nth-child(10) { left: 15%; animation-delay: 3.5s; width: 12px; height: 12px; }
+        .particle:nth-child(11) { left: 25%; animation-delay: 0.5s; width: 14px; height: 14px; }
+        .particle:nth-child(12) { left: 35%; animation-delay: 2.2s; width: 6px; height: 6px; }
+        .particle:nth-child(13) { left: 45%; animation-delay: 3.8s; width: 20px; height: 20px; }
+        .particle:nth-child(14) { left: 55%; animation-delay: 1.2s; width: 10px; height: 10px; }
+        .particle:nth-child(15) { left: 65%; animation-delay: 4.2s; width: 16px; height: 16px; }
+        .particle:nth-child(16) { left: 75%; animation-delay: 2.8s; width: 8px; height: 8px; }
+        .particle:nth-child(17) { left: 85%; animation-delay: 0.8s; width: 16px; height: 16px; }
+        .particle:nth-child(18) { left: 5%; animation-delay: 3.2s; width: 12px; height: 12px; }
+        .particle:nth-child(19) { left: 95%; animation-delay: 1.8s; width: 14px; height: 14px; }
+        .particle:nth-child(20) { left: 12%; animation-delay: 5.5s; width: 10px; height: 10px; }
+        
+        .particle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: inherit;
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0.2;
+            filter: blur(8px);
+        }
         
         @keyframes float {
             0% {
@@ -197,7 +222,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .menu-item::before {
             content: '';
             position: absolute;
@@ -209,63 +234,133 @@
             transform: scaleY(0);
             transition: transform 0.3s ease;
         }
-        
+
         .menu-item:hover {
             background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
             color: white;
             padding-left: 32px;
         }
-        
+
         .menu-item:hover::before {
             transform: scaleY(1);
         }
-        
+
+        .menu-item:hover .icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px var(--accent));
+        }
+
         .menu-item.active {
             background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
             color: white;
         }
-        
+
         .menu-item.active::before {
             transform: scaleY(1);
         }
-        
+
+        .menu-item.active .icon {
+            transform: scale(1.15);
+        }
+
+        .menu-item .icon-wrapper {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item .icon-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .menu-item:hover .icon-wrapper::before {
+            width: 100px;
+            height: 100px;
+            opacity: 0.3;
+        }
+
+        .menu-item.active .icon-wrapper {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4), 0 0 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .menu-item:hover .icon-wrapper {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
         .menu-item .icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
             transition: all 0.3s;
-            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
-        .menu-item .icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
+
         .menu-item.active .icon {
-            color: var(--accent);
-            text-shadow: 0 0 10px var(--accent);
+            background: white;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
+
         .sidebar-footer {
             margin-top: auto;
             padding: 20px;
             text-align: center;
             border-top: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .sidebar-footer::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
         }
         
         .sidebar-footer .version {
-            color: var(--gray);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 12px;
-            padding: 6px 16px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 18px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
             border-radius: 20px;
             display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .sidebar-footer .version:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border-color: var(--primary);
+            color: var(--accent);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
         }
         
         .main-content {
@@ -401,17 +496,19 @@
         }
         
         .content-area::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
         }
         
         .content-area::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
         }
         
         .content-area::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-light);
+            background: linear-gradient(180deg, var(--primary-light), var(--accent));
+            box-shadow: 0 0 15px var(--accent);
         }
         
         .log-output {
@@ -438,16 +535,18 @@
         
         .log-output::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .log-output::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--accent), var(--primary));
-            border-radius: 3px;
+            background: linear-gradient(180deg, var(--accent), #22d3ee);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--accent);
         }
         
         .log-output::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--primary-light), var(--accent));
+            background: linear-gradient(180deg, #22d3ee, var(--accent));
+            box-shadow: 0 0 15px #22d3ee;
         }
         
         .log-container {
@@ -606,16 +705,18 @@
         
         .panel::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .panel::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
         }
         
         .panel::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-light);
+            background: linear-gradient(180deg, var(--primary-light), var(--accent));
+            box-shadow: 0 0 15px var(--accent);
         }
         
         .panel h3 {
@@ -625,6 +726,27 @@
             font-weight: 600;
             position: relative;
             padding-bottom: 12px;
+        }
+
+        #panel-config h3,
+        #panel-personalize h3,
+        #panel-dev h3,
+        #panel-home h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #panel-config h3::before,
+        #panel-personalize h3::before,
+        #panel-dev h3::before,
+        #panel-home h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 2px;
+            box-shadow: 0 0 15px var(--accent);
         }
         
         .panel h3::after {
@@ -642,22 +764,54 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
+            gap: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+            transition: left 0.5s;
         }
         
         .link:hover {
             color: var(--accent);
             text-decoration: none;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .link:hover::before {
+            left: 100%;
         }
         
         .about-footer {
             margin-top: 30px;
-            padding-top: 20px;
+            padding-top: 25px;
             text-align: center;
-            color: var(--gray);
+            color: rgba(255, 255, 255, 0.4);
             font-size: 12px;
             position: relative;
+        }
+
+        .about-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         }
         
         .footer-glow {
@@ -751,6 +905,30 @@
             50% { transform: translateY(-6px); }
         }
         
+        #panel-about h3 {
+            display: block;
+            margin-bottom: 24px;
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        #panel-about h3::before {
+            display: none;
+        }
+
+        #panel-about h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
         .about-header h3 {
             font-size: 32px;
             font-weight: 700;
@@ -760,6 +938,7 @@
             background-clip: text;
             margin-bottom: 10px;
             letter-spacing: 1px;
+            padding-bottom: 0;
         }
         
         .about-subtitle {
@@ -1060,12 +1239,213 @@
             margin-bottom: 24px;
         }
         
-        .form-group label {
-            display: block;
+        #panel-config .form-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        #panel-config .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 10px;
             color: rgba(255, 255, 255, 0.8);
             font-weight: 500;
             font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        #panel-personalize .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        #panel-dev .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        #panel-dev .form-group textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', 'JetBrains Mono', monospace;
+            font-size: 13px;
+            resize: vertical;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+            color: #22d3ee;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #panel-dev .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        #panel-dev .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(34, 211, 238, 0.05) 100%);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 8px 30px rgba(34, 211, 238, 0.15);
+            transform: translateY(-1px);
+        }
+
+        #panel-dev .form-group textarea:hover:not(:focus) {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 100%);
+        }
+
+        #panel-dev .form-group textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #panel-dev .form-group textarea::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        #panel-dev .form-group textarea::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent), #22d3ee);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        #panel-dev .form-group textarea::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #22d3ee, var(--accent));
+            box-shadow: 0 0 15px #22d3ee;
+        }
+
+        #panel-dev .form-group .hint {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #panel-dev .form-group .hint::before {
+            content: '\f059';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 10px;
+            color: var(--accent);
+            opacity: 0.6;
+        }
+
+        #panel-personalize .form-group .hint {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #panel-personalize .form-group .hint::before {
+            content: '\f059';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 10px;
+            color: var(--accent);
+            opacity: 0.6;
+        }
+
+        #panel-config .form-group label::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 2px;
+            opacity: 0.6;
+            transition: all 0.3s;
+        }
+
+        #panel-config .form-group:focus-within label {
+            color: var(--accent);
+        }
+
+        #panel-config .form-group:focus-within label::before {
+            opacity: 1;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        #panel-config .form-group input,
+        #panel-config .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            color: white;
+            backdrop-filter: blur(5px);
+            position: relative;
+        }
+        
+        #panel-config .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.5px;
+        }
+        
+        #panel-config .form-group input:focus,
+        #panel-config .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, rgba(34, 211, 238, 0.02) 100%);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 8px 30px rgba(34, 211, 238, 0.15);
+            transform: translateY(-1px);
+        }
+
+        #panel-config .form-group input:focus::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #panel-config .form-group input:hover:not(:focus),
+        #panel-config .form-group select:hover:not(:focus) {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        }
+        
+        #panel-config .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        #panel-config .form-group select option {
+            background: var(--dark-light);
+            color: white;
+            padding: 10px;
+        }
+
+        #panel-config .form-group .hint {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #panel-config .form-group .hint::before {
+            content: '\f059';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 10px;
+            color: var(--accent);
+            opacity: 0.6;
         }
         
         .form-group input,
@@ -1235,6 +1615,34 @@
         .btn:hover::before {
             left: 100%;
         }
+
+        .btn.loading {
+            pointer-events: none;
+            color: transparent;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            margin: -9px 0 0 -9px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: btn-spinner 0.8s linear infinite;
+        }
+
+        @keyframes btn-spinner {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-primary.loading::after {
+            border-color: rgba(255,255,255,0.3);
+            border-top-color: white;
+        }
         
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
@@ -1278,14 +1686,17 @@
         }
         
         .btn-secondary {
-            background: linear-gradient(135deg, var(--gray) 0%, #475569 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
             color: white;
-            opacity: 0.9;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
         }
         
         .btn-secondary:hover {
-            opacity: 1;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border-color: var(--accent);
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(99, 102, 241, 0.25);
         }
         
         .btn:disabled {
@@ -1364,43 +1775,81 @@
         }
         
         .alert {
-            padding: 14px 18px;
-            border-radius: 12px;
+            padding: 16px 20px;
+            border-radius: 14px;
             margin-bottom: 24px;
             display: flex;
             align-items: flex-start;
-            gap: 12px;
+            gap: 14px;
             font-size: 14px;
             line-height: 1.5;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;              /* 禁止被父级 flex 容器压缩 */
+            min-height: min-content;     /* 确保至少能容纳内容 */
+            height: auto;                /* 高度由内容决定 */
         }
-        
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-radius: 4px 0 0 4px;
+        }
+
         .alert-info {
-            background: rgba(34, 211, 238, 0.1);
-            border: 1px solid rgba(34, 211, 238, 0.3);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.12) 0%, rgba(34, 211, 238, 0.05) 100%);
+            border: 1px solid rgba(34, 211, 238, 0.25);
             color: #22d3ee;
         }
-        
+
+        .alert-info::before {
+            background: linear-gradient(180deg, #22d3ee, #06b6d4);
+            box-shadow: 0 0 15px #22d3ee;
+        }
+
         .alert-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.25);
             color: var(--warning);
         }
 
+        .alert-warning::before {
+            background: linear-gradient(180deg, #f59e0b, #d97706);
+            box-shadow: 0 0 15px #f59e0b;
+        }
+
         .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.25);
             color: var(--danger);
         }
 
+        .alert-danger::before {
+            background: linear-gradient(180deg, #ef4444, #dc2626);
+            box-shadow: 0 0 15px #ef4444;
+        }
+
         .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.25);
             color: var(--success);
+        }
+
+        .alert-success::before {
+            background: linear-gradient(180deg, #10b981, #059669);
+            box-shadow: 0 0 15px #10b981;
         }
         
         .alert .icon {
-            font-size: 18px;
+            font-size: 20px;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .toast-container {
@@ -1524,12 +1973,18 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            animation: modal-backdrop-fade 0.3s ease;
+        }
+
+        @keyframes modal-backdrop-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .modal-overlay.show {
@@ -1538,14 +1993,73 @@
         
         .modal {
             background: linear-gradient(180deg, var(--dark-light) 0%, var(--dark) 100%);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 35px;
             width: 90%;
             max-width: 520px;
             max-height: 85vh;
             overflow-y: auto;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.15);
+            animation: modal-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        @keyframes modal-slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+            border-radius: 24px 24px 0 0;
+        }
+
+        .modal h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, white, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            transform: rotate(90deg);
         }
         
         .modal::-webkit-scrollbar {
@@ -1554,16 +2068,18 @@
         
         .modal::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
+            border-radius: 4px;
         }
         
         .modal::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
         }
         
         .modal::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-light);
+            background: linear-gradient(180deg, var(--primary-light), var(--accent));
+            box-shadow: 0 0 15px var(--accent);
         }
         
         .modal h2 {
@@ -1591,21 +2107,33 @@
         }
         
         .status-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 20px;
             margin-top: 10px;
             backdrop-filter: blur(10px);
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
         }
         
         .status-card:hover {
             border-color: var(--primary);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(99, 102, 241, 0.25), 0 0 20px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
         }
         
         .status-card h4 {
@@ -1615,7 +2143,7 @@
             font-size: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         
         .status-card h4::before {
@@ -1630,16 +2158,20 @@
         .status-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 14px 16px;
             border-bottom: 1px solid var(--glass-border);
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            margin-bottom: 4px;
         }
         
         .status-item:hover {
-            padding-left: 8px;
-            padding-right: 8px;
-            background: rgba(99, 102, 241, 0.05);
-            border-radius: 8px;
+            padding-left: 12px;
+            padding-right: 12px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.03) 100%);
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+            transform: translateX(4px);
         }
         
         .status-item:last-child {
@@ -1647,8 +2179,25 @@
         }
         
         .status-label {
-            color: var(--gray);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-label::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--gray);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .status-item:hover .status-label::before {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
         }
         
         .status-value {
@@ -1679,32 +2228,42 @@
         <div class="particle"></div>
         <div class="particle"></div>
         <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
     </div>
     <div class="container">
         <div class="sidebar">
             <h2><i class="fas fa-wifi"></i> Auto_Connect</h2>
             <div class="menu-item active" data-panel="home">
-                <span class="icon"><i class="fas fa-house"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-house"></i></span></span>
                 <span>控制台</span>
             </div>
             <div class="menu-item" data-panel="config">
-                <span class="icon"><i class="fas fa-gear"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-gear"></i></span></span>
                 <span>账号配置</span>
             </div>
             <div class="menu-item" data-panel="personalize">
-                <span class="icon"><i class="fas fa-palette"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-palette"></i></span></span>
                 <span>个性化设置</span>
             </div>
             <div class="menu-item" data-panel="help">
-                <span class="icon"><i class="fas fa-book"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-book"></i></span></span>
                 <span>使用说明</span>
             </div>
             <div class="menu-item" data-panel="dev">
-                <span class="icon"><i class="fas fa-wrench"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-wrench"></i></span></span>
                 <span>开发选项</span>
             </div>
             <div class="menu-item" data-panel="about">
-                <span class="icon"><i class="fas fa-circle-info"></i></span>
+                <span class="icon-wrapper"><span class="icon"><i class="fas fa-circle-info"></i></span></span>
                 <span>关于</span>
             </div>
             <div class="sidebar-footer">
@@ -1755,6 +2314,31 @@
                         <span class="icon"><i class="fas fa-circle-info"></i></span>
                         <span>本程序当前仅支持<strong>锐捷(Ruijie) ePortal 系统</strong>校园网认证。如需其他校园网类型，请联系开发者适配。</span>
                     </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(34, 211, 238, 0.02) 100%); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                        <h5 style="color: #22d3ee; margin: 0 0 15px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-question-circle"></i> 配置示例
+                        </h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; font-size: 12px;">
+                                <div style="color: rgba(255,255,255,0.6); margin-bottom: 8px;">运营商格式</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• 移动：CMCC-xxxx</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• 联通：ChinaUnicom-xxx</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• 电信：ChinaNet-xxx</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; font-size: 12px;">
+                                <div style="color: rgba(255,255,255,0.6); margin-bottom: 8px;">SSID 格式</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• 校园网</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• ChinaNet</div>
+                                <div style="color: #22d3ee; font-family: monospace;">• CMCC-xxxx</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; font-size: 12px;">
+                                <div style="color: rgba(255,255,255,0.6); margin-bottom: 8px;">index_url 参考格式</div>
+                                <div style="color: #22d3ee; font-family: monospace; word-break: break-all;">http://10.x.x.x/eportal/...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form id="configForm">
                         <div class="form-group">
                             <label>用户名</label>
@@ -1774,7 +2358,7 @@
                         </div>
                         <div class="form-group">
                             <label>WiFi 名称 (SSID)</label>
-                            <input type="text" id="wifiSsid" placeholder="例如: fosu">
+                            <input type="text" id="wifiSsid" placeholder="WiFi名称">
                         </div>
                         <div class="form-group">
                             <label>网卡接口名称</label>
@@ -1794,6 +2378,27 @@
                 
                 <div class="panel" id="panel-personalize">
                     <h3>个性化设置</h3>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                        <h5 style="color: var(--accent); margin: 0 0 15px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle"></i> 选项说明
+                        </h5>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: white; font-size: 13px; margin-bottom: 4px;"><i class="fas fa-power-off" style="color: var(--success); width: 18px;"></i> 开机自动启动</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px;">系统启动时自动运行程序，在后台静默连接网络，无需手动操作。适合宿舍/实验室长期使用。</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: white; font-size: 13px; margin-bottom: 4px;"><i class="fas fa-window-minimize" style="color: var(--warning); width: 18px;"></i> 关闭时最小化到托盘</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px;">点击窗口关闭按钮时，程序会隐藏到系统托盘区域继续运行，而不是完全退出。</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: white; font-size: 13px; margin-bottom: 4px;"><i class="fas fa-moon" style="color: #a78bfa; width: 18px;"></i> 校园网不可用时间段</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px;">设置夜间休息时段，程序在该时间段内不会尝试连接。适合规定断网的宿舍，节省流量。</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form id="personalizeForm">
                         <div class="form-group">
                             <div class="checkbox-group">
@@ -1812,9 +2417,9 @@
                         <div class="form-group">
                             <label>校园网不可用时间段（可选）</label>
                             <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="time" id="serviceDisableStart" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;  background: #333;">
+                                <input type="time" id="serviceDisableStart" style="padding: 10px 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); color: #fff; backdrop-filter: blur(5px);">
                                 <span style="color: #fff;">至</span>
-                                <input type="time" id="serviceDisableEnd" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;  background: #333;">
+                                <input type="time" id="serviceDisableEnd" style="padding: 10px 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); color: #fff; backdrop-filter: blur(5px);">
                             </div>
                             <div class="hint">校园网服务不可用的时间段，填写后程序会自动等待恢复</div>
                         </div>
@@ -1834,8 +2439,29 @@
                     <h3>开发选项</h3>
                     <div class="alert alert-warning">
                         <span class="icon"><i class="fas fa-triangle-exclamation"></i></span>
-                        <span>此选项仅供开发调试使用，请勿随意修改。错误修改可能导致程序无法正常运行。</span>
+                        <span>此页面仅供开发调试使用，修改后可能导致程序无法正常工作。</span>
                     </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.02) 100%); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                        <h5 style="color: #f59e0b; margin: 0 0 15px 0; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-code"></i> 参数说明
+                        </h5>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: #fbbf24; font-size: 13px; font-family: monospace;">RSA_exponent / RSA_modulus</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px;">RSA 公钥参数，用于校园网认证加密。通常无需修改。</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: #fbbf24; font-size: 13px; font-family: monospace;">post_url</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px;">校园网认证提交的 URL 地址，需与 index_url 域名一致。</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;">
+                                <div style="color: #fbbf24; font-size: 13px; font-family: monospace;">index_url</div>
+                                <div style="color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px;">校园网登录页面 URL，连接 WiFi 后浏览器跳转的地址。</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <form id="devForm">
                         <div class="form-group">
                             <label>JSON 配置</label>
@@ -1851,6 +2477,18 @@
                 
                 <div class="panel" id="panel-help">
                     <h3><i class="fas fa-book-open"></i> 使用说明</h3>
+                    
+                    <div class="status-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%);">
+                        <h4 style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-lightbulb" style="color: #fbbf24;"></i> 快速操作提示
+                        </h4>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.8; margin-top: 10px;">
+                            <p style="margin: 0 0 8px 0;"><i class="fas fa-play" style="color: var(--success); width: 16px;"></i> 点击「启动」按钮开始自动连接</p>
+                            <p style="margin: 0 0 8px 0;"><i class="fas fa-cog" style="color: var(--accent); width: 16px;"></i> 在「账号配置」中填写校园网信息</p>
+                            <p style="margin: 0 0 8px 0;"><i class="fas fa-moon" style="color: #a78bfa; width: 16px;"></i> 开启「开机自启」实现无人值守</p>
+                            <p style="margin: 0;"><i class="fas fa-bell" style="color: var(--warning); width: 16px;"></i> 查看「日志终端」了解连接详情</p>
+                        </div>
+                    </div><br>
                     <div class="help-section">
                         <span class="step-number">01</span>
                         <h4><i class="fas fa-wifi"></i> 首次配置</h4>
@@ -1898,6 +2536,34 @@
                             <li>日志区域可查看详细的连接和认证信息</li>
                         </ul>
                     </div>
+                    
+                    <h4 style="color: white; margin: 30px 0 15px 0; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-question-circle" style="color: var(--accent);"></i> 常见问题
+                    </h4>
+                    <div class="help-section" style="padding: 0; background: transparent; border: none;">
+                        <div style="display: grid; gap: 15px;">
+                            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 18px;">
+                                <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Q: 为什么连接后无法上网？</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">A: 请检查 index_url 是否正确填写。连接校园网 WiFi 后，浏览器会自动跳转到登录页面，复制地址栏的完整 URL 粘贴到配置中。</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 18px;">
+                                <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Q: 如何查看无线网卡名称？</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">A: 打开命令提示符（CMD），输入 <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">ipconfig</code>，查看「无线局域网适配器 Wi-Fi」下的名称，如 WLAN、Wi-Fi 等。</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 18px;">
+                                <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Q: 开机自启不生效怎么办？</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">A: 需要以管理员权限运行程序一次，然后在个性化设置中开启「开机自动启动」。部分安全软件可能会拦截自启动，需将其加入信任列表。</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 18px;">
+                                <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Q: 认证失败错误码怎么办？</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">A: 查看日志终端中的详细错误信息。常见错误：账号密码错误、运营商选择错误、WiFi 已欠费停机。可尝试重新填写配置或联系网络管理员。</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 18px;">
+                                <div style="color: #22d3ee; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Q: 程序会后台运行吗？</div>
+                                <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">A: 是的，程序运行后会在系统托盘区域显示图标。开启「关闭时最小化到托盘」后，关闭窗口会隐藏到托盘继续运行。</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="panel" id="panel-about">
@@ -1922,8 +2588,15 @@
                             <span class="stat-value">MIT</span>
                             <span class="stat-label">协议</span>
                         </div>
+                        <div class="about-stat">
+                            <span class="stat-value">2026</span>
+                            <span class="stat-label">年份</span>
+                        </div>
                     </div>
                     
+                    <h4 style="color: white; margin: 30px 0 15px 0; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-star" style="color: var(--accent);"></i> 功能特点
+                    </h4>
                     <div class="about-features">
                         <div class="feature-item">
                             <i class="fas fa-bolt"></i>
@@ -1941,9 +2614,75 @@
                             <i class="fas fa-moon"></i>
                             <span>后台运行</span>
                         </div>
+                        <div class="feature-item">
+                            <i class="fas fa-bell"></i>
+                            <span>状态通知</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-desktop"></i>
+                            <span>图形界面</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-language"></i>
+                            <span>多运营商</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-plug"></i>
+                            <span>热插拔WiFi</span>
+                        </div>
                     </div>
                     
-                    <div class="about-github">
+                    <h4 style="color: white; margin: 30px 0 15px 0; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-layer-group" style="color: var(--accent);"></i> 技术栈
+                    </h4>
+                    <div class="about-features">
+                        <div class="feature-item">
+                            <i class="fab fa-python"></i>
+                            <span>Python 3.x</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-server"></i>
+                            <span>Eel + Custom Chrome</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fab fa-html5"></i>
+                            <span>HTML5 + CSS3</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fab fa-js"></i>
+                            <span>Vanilla JavaScript</span>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: white; margin: 30px 0 15px 0; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-history" style="color: var(--accent);"></i> 更新日志
+                    </h4>
+                    <div style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px; color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.8;">
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: var(--accent); font-weight: 600;">v1.0.0</span>
+                            <span style="color: rgba(255,255,255,0.4); margin-left: 10px;">2026-03</span>
+                        </div>
+                        <ul style="margin: 0; padding-left: 20px; color: rgba(255,255,255,0.6);">
+                            <li>首次发布</li>
+                            <li>锐捷 ePortal 校园网认证支持</li>
+                            <li>自动连接与定时任务</li>
+                            <li>多运营商选择（移动/联通/电信）</li>
+                            <li>系统托盘与后台运行</li>
+                        </ul>
+                    </div>
+                    
+                    <h4 style="color: white; margin: 30px 0 15px 0; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-envelope" style="color: var(--accent);"></i> 联系我们
+                    </h4>
+                    <div style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px; color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.8;">
+                        <p style="margin: 0 0 10px 0;">如遇问题或需适配其他校园网类型，欢迎提交 Issue 或联系开发者。</p>
+                        <p style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fab fa-github" style="color: var(--accent);"></i>
+                            <a href="https://github.com/Aurorp1g/Auto_Connect" target="_blank" class="link">GitHub Issues</a>
+                        </p>
+                    </div>
+                    
+                    <div class="about-github" style="margin-top: 35px;">
                         <a href="https://github.com/Aurorp1g/Auto_Connect" target="_blank" class="github-btn">
                             <i class="fab fa-github"></i>
                             <span>在 GitHub 上查看</span>
@@ -1967,6 +2706,9 @@
     
     <div class="modal-overlay" id="firstRunModal">
         <div class="modal">
+            <button type="button" class="modal-close" onclick="document.getElementById('firstRunModal').classList.remove('show')">
+                <i class="fas fa-times"></i>
+            </button>
             <h2>欢迎使用</h2>
             <div class="alert alert-warning" style="margin-bottom: 15px;">
                 <span class="icon"><i class="fas fa-triangle-exclamation"></i></span>
@@ -2166,23 +2908,50 @@
         }
         
         function startService() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            startBtn.classList.add('loading');
+            startBtn.textContent = '连接中...';
+            startBtn.disabled = true;
+            
             if (window.eel) {
                 window.eel.start_service()();
                 addLog('服务已启动', 'success');
                 showToast('服务已启动', 'success');
                 isRunning = true;
                 updateStatus();
+                
+                setTimeout(function() {
+                    startBtn.classList.remove('loading');
+                    startBtn.textContent = '已启动';
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                }, 1500);
             }
         }
         
         function stopService() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            stopBtn.classList.add('loading');
+            stopBtn.textContent = '停止中...';
+            stopBtn.disabled = true;
+            
             if (window.eel) {
                 window.eel.stop_service()();
                 addLog('服务已停止', 'info');
                 showToast('服务已停止', 'info');
                 isRunning = false;
-                updateStatus();
+                
+                setTimeout(function() {
+                    stopBtn.classList.remove('loading');
+                    stopBtn.textContent = '停止';
+                    stopBtn.disabled = true;
+                    startBtn.disabled = false;
+                    startBtn.textContent = '启动';
+                }, 1000);
             }
+            updateStatus();
         }
         
         function loadConfig() {
@@ -2243,15 +3012,26 @@
         }
         
         function saveAndGenerate() {
+            const btn = document.querySelector('#panel-config .btn-primary');
+            btn.classList.add('loading');
+            btn.textContent = '保存中...';
+            
             saveConfig().then(function() {
                 generatePostData();
             }).catch(function(error) {
                 addLog('保存配置失败: ' + error, 'error');
                 showToast('保存配置失败', 'error');
+            }).finally(function() {
+                btn.classList.remove('loading');
+                btn.textContent = '保存配置';
             });
         }
         
         function savePersonalize() {
+            const btn = document.querySelector('#panel-personalize .btn-primary');
+            btn.classList.add('loading');
+            btn.textContent = '保存中...';
+            
             const config = {
                 auto_start: document.getElementById('autoStart').checked,
                 minimize_to_tray: document.getElementById('minimizeToTray').checked,
@@ -2268,6 +3048,8 @@
                         addLog('设置保存失败: ' + result.error, 'error');
                         showToast('设置保存失败', 'error');
                     }
+                    btn.classList.remove('loading');
+                    btn.textContent = '保存设置';
                 });
             }
         }
