@@ -211,12 +211,7 @@ def handle_status_change_inner(wifi_connected: bool, network_ok: bool):
                     last_network_status = True
                     
                     time.sleep(2)
-                    network_still_ok = False
-                    try:
-                        with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
-                            network_still_ok = response.status == 204
-                    except:
-                        pass
+                    network_still_ok = check_network()
                     
                     if not network_still_ok:
                         push_log_to_front('认证成功但网络仍不可用，可能是服务已终止', 'warning')
@@ -257,12 +252,7 @@ def handle_status_change_inner(wifi_connected: bool, network_ok: bool):
                         last_wifi_status = True
                         
                         time.sleep(2)
-                        network_still_ok = False
-                        try:
-                            with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
-                                network_still_ok = response.status == 204
-                        except:
-                            pass
+                        network_still_ok = check_network()
                         
                         if network_still_ok:
                             last_network_status = True
@@ -293,12 +283,7 @@ def service_worker():
     CHECK_INTERVAL = 2  # 每2秒检测一次
     
     while service_running:
-        network_ok = False
-        try:
-            with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
-                network_ok = response.status == 204
-        except:
-            pass
+        network_ok = check_network()
         
         if network_ok:
             if not last_network_status:
@@ -437,12 +422,7 @@ def get_status():
     
     wifi_ok = is_connected(target_ssid)
     
-    network_ok = False
-    try:
-        with urllib.request.urlopen('http://connectivitycheck.gstatic.com/generate_204', timeout=3) as response:
-            network_ok = response.status == 204
-    except:
-        pass
+    network_ok = check_network()
     
     return {
         'running': service_running,
