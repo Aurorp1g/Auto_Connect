@@ -5,4 +5,5 @@ chromium/user_data/*
 build/*
 dist/*
 node_modules/*
+auto_connect.bat
 package-lock.json

@@ -1,0 +1,147 @@
+import re    # 正则表达式，用于匹配字符
+from urllib import request
+import urllib.request
+import requests
+import time
+import random
+import os
+import socket
+import signal
+import sys
+
+# 全局变量，用于控制程序中断
+interrupted = False
+
+def signal_handler(sig, frame):
+    """处理Ctrl+C信号"""
+    global interrupted
+    print("\n自动联网脚本将重新启动...")
+    interrupted = True
+
+def check_network_connection():
+    """检查网络连接状态"""
+    targets = [
+        "http://connectivitycheck.gstatic.com/generate_204",
+        "http://www.msftconnecttest.com/connecttest.txt",
+        "http://connect.rom.miui.com/generate_204"
+    ]
+    timeout = 8
+
+    for url in targets:
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as response:
+                if response.status == 204:
+                    return True
+        except:
+            continue
+    return False
+
+def auto_login(post_URL, get_URL, log_file_path):
+    print("自动联网脚本开始运行...")
+    
+    # 初始化变量，确保在异常情况下也能访问
+    title = '未知状态'
+    post_response = None
+    get_status = None
+    error_msg = None
+    
+    try:
+        # 请求校园网url
+        response = request.urlopen(get_URL)
+        html = response.read()
+        # 获取title元素内容
+        res = re.findall('<title>(.*)</title>', html.decode(encoding="GBK", errors="strict"))
+        if len(res) == 0:
+            title = '未登录'
+        else:
+            title = res[0]
+        # 根据title元素内容判断是否处于已登录状态
+        if title == '登录成功':    
+            print('当前状态为：已登陆成功！')
+        else:
+            print('当前状态为：未登录！')
+            # 设置post的请求头，浏览器点击F12，在Netword中选中post请求，点击Headers、request header面板中查看
+            header = {}
+            # 设置post的请求数据，浏览器点击F12，在Netword中选中post请求，点击payload面板中查看
+            data = {}
+            # 发送post请求（设置好header和data）
+            post_response = requests.post(post_URL, data, headers=header)
+            print(f"post请求状态码 {post_response.status_code}")  # 修正状态码获取方式
+            uft_str = post_response.text.encode("iso-8859-1").decode('utf-8')
+        
+            # 发送get请求（修改响应变量名）
+            schoolWebLoginURL = get_URL
+            get_status = requests.get(schoolWebLoginURL).status_code
+            print(f"get请求状态码 {get_status}")
+        
+    except Exception as e:
+        print(f"发生错误: {str(e)}")
+        error_msg = str(e)
+        
+    # 修改后的日志记录部分
+    with open(log_file_path, 'a', encoding='utf-8') as log_file:
+        log_file.write(f"[{time.ctime()}] 自动联网脚本开始运行\n")
+        log_file.write(f"当前状态: {'已登陆成功' if title == '登录成功' else title}\n")
+        if post_response is not None:
+            log_file.write(f"POST状态码: {post_response.status_code}\n")
+        if get_status is not None:
+            log_file.write(f"GET状态码: {get_status}\n")
+        if error_msg is not None:
+            log_file.write(f"错误信息: {error_msg}\n")
+        log_file.write("-"*50 + "\n")
+
+    # 检查文件大小，如果大于1KB则清空文件
+    if os.path.getsize(log_file_path) > 1024:
+        open(log_file_path, 'w').close()
+        
+    # 返回错误信息，用于判断是否需要休眠
+    return error_msg
+
+def sleep_with_interrupt(seconds):
+    """可中断的休眠函数"""
+    global interrupted
+    for i in range(int(seconds)):
+        if interrupted:
+            return True  # 返回True表示被中断
+        time.sleep(1)
+    return False  # 返回False表示正常完成休眠
+
+if __name__ == "__main__":
+    # 注册信号处理器
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    log_file_path = 'auto_connect.log'
+    # 确保日志文件存在
+    if not os.path.exists(log_file_path):
+        open(log_file_path, 'w').close()
+    
+    post_URL = '' 
+    get_URL = ''
+    
+    while True:
+        # 重置中断标志
+        interrupted = False
+        
+        while not check_network_connection():
+            error = auto_login(post_URL, get_URL, log_file_path)
+            
+            # 检查是否是套接字错误，如果是则休眠半小时（可中断）
+            if error and any(socket_error in error for socket_error in ['10051', '套接字', 'socket']):
+                print("检测到网络连接问题，休眠1小时后再重试...")
+                print("按Ctrl+C可中断休眠并立即重试")
+                if sleep_with_interrupt(3600):  # 1小时 = 3600秒
+                    continue  # 跳过当前循环，立即重试
+            else:
+                # 正常休眠1-2秒（可中断）
+                if sleep_with_interrupt(2):
+                    continue  # 跳过当前循环，立即重试
+                
+        print("网络已恢复，自动联网脚本结束运行")
+        
+        # 每1min左右检测一次是否成功连接（可中断）
+        rand = random.uniform(0, 20)
+        sleep_time = 60.0 + rand
+        print(f"休眠 {int(sleep_time)} s")
+        
+        if sleep_with_interrupt(sleep_time):
+            continue  # 跳过当前循环，立即重新检测网络
