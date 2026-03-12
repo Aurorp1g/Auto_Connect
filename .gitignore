@@ -6,4 +6,6 @@ build/*
 dist/*
 node_modules/*
 auto_connect.bat
+auto_connect.lnk
+Auto_Connect_Installer.exe
 package-lock.json

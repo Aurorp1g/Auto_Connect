@@ -607,6 +607,33 @@ def setup_auto_start(enable):
     return success
 
 
+def activate_browser_window():
+    """激活（显示并置顶）浏览器窗口"""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        
+        user32 = ctypes.windll.user32
+        
+        def enum_windows_callback(hwnd, lParam):
+            if user32.IsWindowVisible(hwnd):
+                length = user32.GetWindowTextLengthW(hwnd)
+                if length > 0:
+                    buff = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, buff, length + 1)
+                    title = buff.value
+                    if 'Chrome' in title or 'Auto_Connect' in title or 'eel' in title:
+                        user32.ShowWindow(hwnd, 9)
+                        user32.SetForegroundWindow(hwnd)
+            return True
+        
+        EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+        user32.EnumWindows(EnumWindowsProc(enum_windows_callback), 0)
+        return True
+    except Exception:
+        return False
+
+
 def launch_browser():
     """启动浏览器窗口"""
     global chrome_process, browser_visible
@@ -616,6 +643,10 @@ def launch_browser():
         browser_visible = True
         log_message('浏览器窗口已启动', 'info')
         return True
+    else:
+        if activate_browser_window():
+            browser_visible = True
+            return True
     return False
 
 
@@ -723,6 +754,29 @@ def run_gui():
     
     init_app()
     
+    def start_command_server():
+        """启动命令服务器，用于接收来自其他实例的命令"""
+        try:
+            cmd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cmd_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            cmd_sock.bind(('localhost', 8889))
+            cmd_sock.listen(1)
+            
+            while True:
+                try:
+                    conn, addr = cmd_sock.accept()
+                    data = conn.recv(1024).decode('utf-8')
+                    conn.close()
+                    
+                    if data == "SHOW_WINDOW":
+                        launch_browser()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+    
+    threading.Thread(target=start_command_server, daemon=True).start()
+    
     def browser_close_callback(page, sockets):
         """浏览器关闭时的回调"""
         global browser_hiding, chrome_process, browser_visible, tray_icon
@@ -827,7 +881,13 @@ if __name__ == "__main__":
     sock.close()
     
     if result == 0:
-        # 端口已被占用，说明程序已在运行
-        print("程序已在运行")
+        print("程序已在运行，正在跳转...")
+        try:
+            cmd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cmd_sock.connect(('localhost', 8889))
+            cmd_sock.send(b'SHOW_WINDOW')
+            cmd_sock.close()
+        except Exception:
+            pass
     else:
         run_gui()

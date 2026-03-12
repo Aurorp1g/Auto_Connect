@@ -5,7 +5,7 @@ a = Analysis(
     ['auto_connect.py'],
     pathex=[],
     binaries=[],
-    datas=[('gui', 'gui'), ('chromium', 'chromium'), ('post', 'post')],
+    datas=[('gui', 'gui'), ('chromium', 'chromium'), ('post', 'post'), ('LICENSE', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,6 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='file_version_info.txt',
     icon=['favicon.ico'],
     contents_directory='.',
 )
