@@ -1,7 +1,7 @@
 *.pyc
 data/*
 logs/*
-chromium/user_data/*
+chromium/*
 build/*
 dist/*
 node_modules/*
