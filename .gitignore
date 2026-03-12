@@ -4,3 +4,5 @@ logs/*
 chromium/user_data/*
 build/*
 dist/*
+node_modules/*
+package-lock.json
