@@ -22,7 +22,7 @@
 
 ### 🔌 智能连接
 - **WiFi 自动连接** - 自动连接到指定校园WiFi热点
-- **校园网自动认证** - 支持 DRCOM、JLGC 等多种校园网认证方式
+- **校园网自动认证** - 支持锐捷(Ruijie) ePortal 系统校园网认证方式
 - **智能重连机制** - 网络断开后自动检测并重新连接
 
 ### 🎨 现代化界面
@@ -54,7 +54,7 @@
 
 ### 系统要求
 
-- **操作系统**：Windows 10/11
+- **操作系统**：Windows 11
 - **Python版本**：3.8+
 - **Node.js**：用于RSA加密认证
 - **内存**：至少512MB可用内存
@@ -116,14 +116,14 @@ Auto_Connect/
 ├── core/                    # 核心模块
 │   ├── campus_login.py      # 校园网登录
 │   ├── config.py            # 配置管理
-│   └── wifi_manager.py     # WiFi 连接管理
+│   └── wifi_manager.py      # WiFi 连接管理
 ├── browser/                 # 浏览器模块
 │   └── custom_chrome.py     # 内置 Chrome 启动器
 ├── chromium/                # 便携版 Chromium（可选）
 ├── gui/                     # 前端资源
 ├── post/                    # 登录认证脚本
-├── build/                   # 构建输出
-│   └── Auto_Connect/        # 打包后的可执行文件
+├── scripts/                 # 脚本目录
+├── history/                 # 历史自动连接脚本
 ├── requirements.txt         # Python 依赖
 └── Auto_Connect.spec        # PyInstaller 配置文件
 ```
@@ -147,7 +147,7 @@ chromium/
 
 ### 下载地址
 
-- [Chromium Browser Downloads](https://chromium.cypress.io/)
+- [Chromium Browser Downloads](https://github.com/Hibbiki/chromium-win64/releases/download/v125.0.6422.113-r1287751/chrome.nosync.7z)
 - 或自行搜索 `Chromium 125.0.6422.113 portable`
 
 ### 注意事项
