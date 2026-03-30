@@ -5,7 +5,7 @@ a = Analysis(
     ['auto_connect.py'],
     pathex=[],
     binaries=[],
-    datas=[('gui', 'gui'), ('chromium', 'chromium'), ('post', 'post'), ('LICENSE', '.')],
+    datas=[('gui', 'gui'), ('chromium', 'chromium'), ('post', 'post'), ('node', 'node'), ('LICENSE', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

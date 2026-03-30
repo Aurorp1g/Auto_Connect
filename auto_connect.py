@@ -35,6 +35,19 @@ def get_project_root():
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
+
+def get_node_path():
+    """获取内置 Node.js 可执行文件路径"""
+    base_path = get_project_root()
+    if sys.platform == 'win32':
+        node_path = os.path.join(base_path, 'node', 'node.exe')
+    else:
+        node_path = os.path.join(base_path, 'node', 'node')
+    
+    if os.path.exists(node_path):
+        return node_path
+    return None
+
 service_thread = None
 service_running = False
 handling = False
@@ -95,16 +108,20 @@ def generate_post_data():
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
         
-        node_available = subprocess.run(
-            ['node', '--version'],
+        node_exe = get_node_path()
+        if node_exe is None:
+            node_exe = 'node'
+        
+        node_check = subprocess.run(
+            [node_exe, '--version'],
             capture_output=True,
             timeout=5,
             startupinfo=startupinfo
         )
         
-        if node_available.returncode == 0:
+        if node_check.returncode == 0:
             body_result = subprocess.run(
-                ['node', body_js_path],
+                [node_exe, body_js_path],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -117,7 +134,7 @@ def generate_post_data():
                 return result
             
             header_result = subprocess.run(
-                ['node', header_js_path],
+                [node_exe, header_js_path],
                 capture_output=True,
                 text=True,
                 timeout=30,
