@@ -17,11 +17,11 @@ VSVersionInfo(
           [
             StringStruct(u'CompanyName', u'Aurorp1g'),
             StringStruct(u'FileDescription', u'Auto_connect'),
-            StringStruct(u'FileVersion', u'1.0.0'),
+            StringStruct(u'FileVersion', u'1.1.0'),
             StringStruct(u'InternalName', u'Auto_Connect'),
             StringStruct(u'OriginalFilename', u'Auto_Connect.exe'),
             StringStruct(u'ProductName', u'Auto_Connect'),
-            StringStruct(u'ProductVersion', u'1.0.0'),
+            StringStruct(u'ProductVersion', u'1.1.0'),
             StringStruct(u'LegalLicense', u'MIT License'),
             StringStruct(u'LegalCopyright', u'Copyright © 2026 Aurorp1g. All rights reserved.')
           ]
