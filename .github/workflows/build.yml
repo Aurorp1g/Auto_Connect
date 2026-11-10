@@ -65,7 +65,7 @@ jobs:
           }
           if (-not $makensis) { throw "makensis not found" }
           Write-Host "Using makensis: $makensis"
-          & $makensis Auto_Connect_Installer.nsi
+          & $makensis -INPUTCHARSET CP936 Auto_Connect_Installer.nsi
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4

@@ -1,6 +1,6 @@
-; ¸Ã½Å±¾Ê¹ÓÃ HM VNISEdit ½Å±¾±à¼­Æ÷Ïòµ¼²úÉú
+ï»¿; è¯¥è„šæœ¬ä½¿ç”¨ HM VNISEdit è„šæœ¬ç¼–è¾‘å™¨å‘å¯¼äº§ç”Ÿ
 
-; °²×°³ÌĞò³õÊ¼¶¨Òå³£Á¿
+; å®‰è£…ç¨‹åºåˆå§‹å®šä¹‰å¸¸é‡
 !define PRODUCT_NAME "Auto_Connect"
 !define PRODUCT_VERSION "1.2.0"
 !define PRODUCT_PUBLISHER "Aurorp1g"
@@ -11,34 +11,34 @@
 
 SetCompressor lzma
 
-; ------ MUI ÏÖ´ú½çÃæ¶¨Òå (1.67 °æ±¾ÒÔÉÏ¼æÈİ) ------
+; ------ MUI ç°ä»£ç•Œé¢å®šä¹‰ (1.67 ç‰ˆæœ¬ä»¥ä¸Šå…¼å®¹) ------
 !include "MUI.nsh"
 !include "LogicLib.nsh"
 
-; MUI Ô¤¶¨Òå³£Á¿
+; MUI é¢„å®šä¹‰å¸¸é‡
 !define MUI_ABORTWARNING
 !define MUI_ICON "favicon.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
-; »¶Ó­Ò³Ãæ
+; æ¬¢è¿é¡µé¢
 !insertmacro MUI_PAGE_WELCOME
-; °²×°Ä¿Â¼Ñ¡ÔñÒ³Ãæ
+; å®‰è£…ç›®å½•é€‰æ‹©é¡µé¢
 !insertmacro MUI_PAGE_DIRECTORY
-; °²×°¹ı³ÌÒ³Ãæ
+; å®‰è£…è¿‡ç¨‹é¡µé¢
 !insertmacro MUI_PAGE_INSTFILES
-; °²×°Íê³ÉÒ³Ãæ
+; å®‰è£…å®Œæˆé¡µé¢
 !define MUI_FINISHPAGE_RUN "$INSTDIR\Auto_Connect.exe"
 !insertmacro MUI_PAGE_FINISH
 
-; °²×°Ğ¶ÔØ¹ı³ÌÒ³Ãæ
+; å®‰è£…å¸è½½è¿‡ç¨‹é¡µé¢
 !insertmacro MUI_UNPAGE_INSTFILES
 
-; °²×°½çÃæ°üº¬µÄÓïÑÔÉèÖÃ
+; å®‰è£…ç•Œé¢åŒ…å«çš„è¯­è¨€è®¾ç½®
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
-; °²×°Ô¤ÊÍ·ÅÎÄ¼ş
+; å®‰è£…é¢„é‡Šæ”¾æ–‡ä»¶
 !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS
-; ------ MUI ÏÖ´ú½çÃæ¶¨Òå½áÊø ------
+; ------ MUI ç°ä»£ç•Œé¢å®šä¹‰ç»“æŸ ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "Auto_Connect_Installer.exe"
@@ -55,7 +55,7 @@ Section "MainSection" SEC01
   CreateDirectory "$SMPROGRAMS\Auto_Connect"
   CreateShortCut "$SMPROGRAMS\Auto_Connect\Auto_Connect.lnk" "$INSTDIR\Auto_Connect.exe"
   CreateShortCut "$DESKTOP\Auto_Connect.lnk" "$INSTDIR\Auto_Connect.exe"
-  ; [ÒÑÉ¾³ıÖØ¸´] File "dist\Auto_Connect\Auto_Connect.exe"
+  ; [å·²åˆ é™¤é‡å¤] File "dist\Auto_Connect\Auto_Connect.exe"
 SectionEnd
 
 Section -AdditionalIcons
@@ -76,70 +76,70 @@ Section -Post
 SectionEnd
 
 /******************************
- *  ÒÔÏÂÊÇ°²×°³ÌĞòµÄĞ¶ÔØ²¿·Ö  *
+ *  ä»¥ä¸‹æ˜¯å®‰è£…ç¨‹åºçš„å¸è½½éƒ¨åˆ†  *
  ******************************/
 
 Section Uninstall
-  ; 1) ÏÈÕûÌåµİ¹éÉ¾³ı°²×°Ä¿Â¼£¨°üº¬ËùÓĞ×ÓÄ¿Â¼ºÍÎÄ¼ş£©
+  ; 1) å…ˆæ•´ä½“é€’å½’åˆ é™¤å®‰è£…ç›®å½•ï¼ˆåŒ…å«æ‰€æœ‰å­ç›®å½•å’Œæ–‡ä»¶ï¼‰
   RMDir /r "$INSTDIR"
 
-  ; 2) ÔÙÉ¾¿ì½İ·½Ê½£¨Èç¹ûÄ¿Â¼ÒÑ²»´æÔÚÒ²Ã»ÎÊÌâ£©
+  ; 2) å†åˆ å¿«æ·æ–¹å¼ï¼ˆå¦‚æœç›®å½•å·²ä¸å­˜åœ¨ä¹Ÿæ²¡é—®é¢˜ï¼‰
   Delete "$DESKTOP\Auto_Connect.lnk"
   Delete "$SMPROGRAMS\Auto_Connect\Auto_Connect.lnk"
   Delete "$SMPROGRAMS\Auto_Connect\Website.lnk"
   Delete "$SMPROGRAMS\Auto_Connect\Uninstall.lnk"
   RMDir  "$SMPROGRAMS\Auto_Connect"
 
-  ; 3) ÇåÀíÈí¼ş±¾ÉíµÄ×¢²á±íĞÅÏ¢
+  ; 3) æ¸…ç†è½¯ä»¶æœ¬èº«çš„æ³¨å†Œè¡¨ä¿¡æ¯
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
 
-  ; 4) ¡¾ĞŞÕı¡¿ÇåÀí¿ª»ú×ÔÆô¶¯×¢²á±íÏî - Í¬Ê±³¢ÊÔ64Î»ºÍ32Î»ÊÓÍ¼
+  ; 4) ã€ä¿®æ­£ã€‘æ¸…ç†å¼€æœºè‡ªå¯åŠ¨æ³¨å†Œè¡¨é¡¹ - åŒæ—¶å°è¯•64ä½å’Œ32ä½è§†å›¾
   DetailPrint "Removing AutoConnect startup entry..."
 
-  ; ÏÈ³¢ÊÔ64Î»ÊÓÍ¼£¨Ô­Éú×¢²á±í£©
+  ; å…ˆå°è¯•64ä½è§†å›¾ï¼ˆåŸç”Ÿæ³¨å†Œè¡¨ï¼‰
   SetRegView 64
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "AutoConnect"
 
-  ; ÔÙ³¢ÊÔ32Î»ÊÓÍ¼£¨Wow6432Node£¬Èç¹ûPythonÊÇ32Î»Ğ´ÈëµÄ£©
+  ; å†å°è¯•32ä½è§†å›¾ï¼ˆWow6432Nodeï¼Œå¦‚æœPythonæ˜¯32ä½å†™å…¥çš„ï¼‰
   SetRegView 32
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "AutoConnect"
 
-  ; »Ö¸´Ä¬ÈÏÊÓÍ¼
+  ; æ¢å¤é»˜è®¤è§†å›¾
   SetRegView lastused
 
-  ; ¿ÉÑ¡£ºÈç¹ûµ£ĞÄÈ¨ÏŞÉÏÏÂÎÄÎÊÌâ£¬Ò²³¢ÊÔÉ¾³ıHKLMµÄ£¨Èç¹ûÔø´íÎóĞ´Èë£©
+  ; å¯é€‰ï¼šå¦‚æœæ‹…å¿ƒæƒé™ä¸Šä¸‹æ–‡é—®é¢˜ï¼Œä¹Ÿå°è¯•åˆ é™¤HKLMçš„ï¼ˆå¦‚æœæ›¾é”™è¯¯å†™å…¥ï¼‰
   DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "AutoConnect"
 
   SetAutoClose true
 SectionEnd
 
-#-- ¸ù¾İ NSIS ½Å±¾±à¼­¹æÔò£¬ËùÓĞ Function Çø¶Î±ØĞë·ÅÖÃÔÚ Section Çø¶ÎÖ®ºó±àĞ´£¬ÒÔ±ÜÃâ°²×°³ÌĞò³öÏÖÎ´¿ÉÔ¤ÖªµÄÎÊÌâ¡£--#
+#-- æ ¹æ® NSIS è„šæœ¬ç¼–è¾‘è§„åˆ™ï¼Œæ‰€æœ‰ Function åŒºæ®µå¿…é¡»æ”¾ç½®åœ¨ Section åŒºæ®µä¹‹åç¼–å†™ï¼Œä»¥é¿å…å®‰è£…ç¨‹åºå‡ºç°æœªå¯é¢„çŸ¥çš„é—®é¢˜ã€‚--#
 
 Function un.onInit
-  ; ¡¾ĞŞÕı¡¿¼ì²â²¢ÖÕÖ¹ Auto_Connect.exe£¨Ö÷³ÌĞò£©
+  ; ã€ä¿®æ­£ã€‘æ£€æµ‹å¹¶ç»ˆæ­¢ Auto_Connect.exeï¼ˆä¸»ç¨‹åºï¼‰
   nsExec::ExecToStack '"cmd" /c tasklist /FI "IMAGENAME eq Auto_Connect.exe" 2>nul | find /I "Auto_Connect.exe"'
   Pop $0
 
   ${If} $0 == 0
-    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Auto_Connect ÕıÔÚÔËĞĞ£¨°üº¬ÄÚÖÃä¯ÀÀÆ÷£©¡£$\n$\nÊÇ·ñÇ¿ÖÆ¹Ø±Õ³ÌĞò¼°ËùÓĞ¹ØÁª½ø³Ì²¢¼ÌĞøĞ¶ÔØ£¿$\n$\n£¨×¢Òâ£ºÇ¿ÖÆ¹Ø±Õ¿ÉÄÜµ¼ÖÂÎ´±£´æµÄÅäÖÃ¶ªÊ§£©" IDYES terminate_app IDNO abort_uninstall
+    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Auto_Connect æ­£åœ¨è¿è¡Œï¼ˆåŒ…å«å†…ç½®æµè§ˆå™¨ï¼‰ã€‚$\n$\næ˜¯å¦å¼ºåˆ¶å…³é—­ç¨‹åºåŠæ‰€æœ‰å…³è”è¿›ç¨‹å¹¶ç»§ç»­å¸è½½ï¼Ÿ$\n$\nï¼ˆæ³¨æ„ï¼šå¼ºåˆ¶å…³é—­å¯èƒ½å¯¼è‡´æœªä¿å­˜çš„é…ç½®ä¸¢å¤±ï¼‰" IDYES terminate_app IDNO abort_uninstall
 
     terminate_app:
       DetailPrint "Terminating Auto_Connect.exe and process tree..."
-      ; ¡¾¹Ø¼ü¡¿Ê¹ÓÃ /T ²ÎÊıÖÕÖ¹Õû¸ö½ø³ÌÊ÷£¨°üº¬×Ó½ø³Ì£©
+      ; ã€å…³é”®ã€‘ä½¿ç”¨ /T å‚æ•°ç»ˆæ­¢æ•´ä¸ªè¿›ç¨‹æ ‘ï¼ˆåŒ…å«å­è¿›ç¨‹ï¼‰
       nsExec::ExecToStack '"cmd" /c taskkill /IM Auto_Connect.exe /F /T 2>nul'
       Pop $0
-      ; µÈ´ıÖ÷³ÌĞò¼°Æä×Ó½ø³ÌÍË³ö
+      ; ç­‰å¾…ä¸»ç¨‹åºåŠå…¶å­è¿›ç¨‹é€€å‡º
       Sleep 3000
 
-      ; ¡¾ĞŞÕı¡¿Ç¿ÖÆÖÕÖ¹¿ÉÄÜ²ĞÁôµÄ¶ÀÁ¢ Chromium ½ø³Ì£¨Í¨¹ı¶Ë¿Ú 8888 Ê¶±ğ£©
+      ; ã€ä¿®æ­£ã€‘å¼ºåˆ¶ç»ˆæ­¢å¯èƒ½æ®‹ç•™çš„ç‹¬ç«‹ Chromium è¿›ç¨‹ï¼ˆé€šè¿‡ç«¯å£ 8888 è¯†åˆ«ï¼‰
       DetailPrint "Checking for residual Chromium processes..."
       nsExec::ExecToStack '"cmd" /c netstat -ano | findstr ":8888" | findstr "LISTENING" 2>nul'
       Pop $0
 
       ${If} $0 == 0
         DetailPrint "Terminating residual Chromium on port 8888..."
-        ; ¡¾¹Ø¼üĞŞÕı¡¿ĞŞ¸´ÒıºÅÇ¶Ì×£¬Ê¹ÓÃ $\" ×ªÒåÄÚ²¿Ë«ÒıºÅ
+        ; ã€å…³é”®ä¿®æ­£ã€‘ä¿®å¤å¼•å·åµŒå¥—ï¼Œä½¿ç”¨ $\" è½¬ä¹‰å†…éƒ¨åŒå¼•å·
         nsExec::ExecToStack "cmd /c for /f \"tokens=5\" %p in ('netstat -ano ^| findstr \":8888\" ^| findstr \"LISTENING\"') do @taskkill /PID %p /F >nul 2>&1"
         Sleep 1500
       ${EndIf}
@@ -148,8 +148,8 @@ Function un.onInit
   ${EndIf}
 
   continue_uninstall:
-  ; È·ÈÏĞ¶ÔØ¶Ô»°¿ò
-  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "ÄúÈ·ÊµÒªÍêÈ«ÒÆ³ı $(^Name) £¬¼°ÆäËùÓĞµÄ×é¼ş£¿" IDYES +2
+  ; ç¡®è®¤å¸è½½å¯¹è¯æ¡†
+  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "æ‚¨ç¡®å®è¦å®Œå…¨ç§»é™¤ $(^Name) ï¼ŒåŠå…¶æ‰€æœ‰çš„ç»„ä»¶ï¼Ÿ" IDYES +2
 
   abort_uninstall:
   Abort
@@ -157,5 +157,5 @@ FunctionEnd
 
 Function un.onUninstSuccess
   HideWindow
-  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) ÒÑ³É¹¦µØ´ÓÄúµÄ¼ÆËã»úÒÆ³ı¡£"
+  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) å·²æˆåŠŸåœ°ä»æ‚¨çš„è®¡ç®—æœºç§»é™¤ã€‚"
 FunctionEnd
