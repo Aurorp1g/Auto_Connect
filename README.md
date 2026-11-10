@@ -67,7 +67,7 @@
 #### 方法二：源码运行
 ```bash
 # 克隆仓库
-git clone https://github.com/your-repo/Auto_Connect.git
+git clone https://github.com/Aurorp1g/Auto_Connect.git
 cd Auto_Connect
 
 # 安装依赖
@@ -232,7 +232,7 @@ A modern campus network auto-connect tool designed to solve frequent disconnecti
 ### Quick Start
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/Auto_Connect.git
+git clone https://github.com/Aurorp1g/Auto_Connect.git
 cd Auto_Connect
 
 # Install dependencies

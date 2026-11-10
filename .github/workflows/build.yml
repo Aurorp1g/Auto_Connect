@@ -1,0 +1,70 @@
+name: Build Auto_Connect Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Download Chromium
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://github.com/Hibbiki/chromium-win64/releases/download/v125.0.6422.113-r1287751/chrome.nosync.7z" -OutFile "chromium.7z"
+
+      - name: Extract Chromium
+        shell: pwsh
+        run: |
+          7z x -y chromium.7z
+          if (Test-Path "chromium") { Remove-Item -Recurse -Force "chromium" }
+          Rename-Item -Path "chrome-bin" -NewName "chromium"
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onedir --contents-directory . --name Auto_Connect --add-data "gui;gui" --add-data "chromium;chromium" --add-data "post;post" --add-data "node;node" --add-data "LICENSE;." --noconsole --version-file file_version_info.txt -i favicon.ico auto_connect.py
+
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            choco install nsis -y --no-progress
+          }
+
+      - name: Build installer with NSIS
+        shell: pwsh
+        run: |
+          makensis Auto_Connect_Installer.nsi
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Auto_Connect_Installer
+          path: Auto_Connect_Installer.exe
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Auto_Connect_Installer.exe
+          generate_release_notes: true
