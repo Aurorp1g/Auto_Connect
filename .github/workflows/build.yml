@@ -47,14 +47,25 @@ jobs:
       - name: Install NSIS
         shell: pwsh
         run: |
-          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+          $nsisDir = "C:\Program Files (x86)\NSIS"
+          if (-not (Test-Path "$nsisDir\makensis.exe")) {
             choco install nsis -y --no-progress
+          }
+          if (-not (Test-Path "$nsisDir\makensis.exe")) {
+            throw "NSIS installation failed: makensis.exe not found at $nsisDir"
           }
 
       - name: Build installer with NSIS
         shell: pwsh
         run: |
-          makensis Auto_Connect_Installer.nsi
+          $makensis = (Get-Command makensis -ErrorAction SilentlyContinue).Source
+          if (-not $makensis) {
+            $candidate = "C:\Program Files (x86)\NSIS\makensis.exe"
+            if (Test-Path $candidate) { $makensis = $candidate }
+          }
+          if (-not $makensis) { throw "makensis not found" }
+          Write-Host "Using makensis: $makensis"
+          & $makensis Auto_Connect_Installer.nsi
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
