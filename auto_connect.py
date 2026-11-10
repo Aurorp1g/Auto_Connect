@@ -737,10 +737,32 @@ def get_tray_menu():
         icon.stop()
         import os
         os._exit(0)
+
+    def do_stop(icon, item):
+        global service_running
+        if service_running:
+            service_running = False
+            log_message('服务已停止', 'info')
+            push_log_to_front('自动连接服务已停止', 'warning')
+        icon.menu = get_tray_menu()
+
+    def do_restart(icon, item):
+        global service_running
+        if service_running:
+            service_running = False
+            log_message('服务已停止', 'info')
+        # 等待旧服务线程退出，避免与重启后的新线程重叠
+        time.sleep(1)
+        start_service()
+        log_message('服务已重启', 'info')
+        push_log_to_front('自动连接服务已重启', 'info')
+        icon.menu = get_tray_menu()
     
     return pystray.Menu(
         pystray.MenuItem('显示窗口', do_show, visible=not browser_visible),
         pystray.MenuItem('隐藏窗口', do_hide, visible=browser_visible),
+        pystray.MenuItem('停止服务', do_stop, visible=service_running),
+        pystray.MenuItem('重启服务', do_restart),
         pystray.MenuItem('退出', do_exit)
     )
 
