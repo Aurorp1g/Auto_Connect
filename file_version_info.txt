@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 0, 0, 0),
-    prodvers=(1, 0, 0, 0),
+    filevers=(2, 0, 0, 0),
+    prodvers=(2, 0, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -17,11 +17,11 @@ VSVersionInfo(
           [
             StringStruct(u'CompanyName', u'Aurorp1g'),
             StringStruct(u'FileDescription', u'Auto_connect'),
-            StringStruct(u'FileVersion', u'1.2.0'),
+            StringStruct(u'FileVersion', u'2.0.0'),
             StringStruct(u'InternalName', u'Auto_Connect'),
             StringStruct(u'OriginalFilename', u'Auto_Connect.exe'),
             StringStruct(u'ProductName', u'Auto_Connect'),
-            StringStruct(u'ProductVersion', u'1.2.0'),
+            StringStruct(u'ProductVersion', u'2.0.0'),
             StringStruct(u'LegalLicense', u'MIT License'),
             StringStruct(u'LegalCopyright', u'Copyright © 2026 Aurorp1g. All rights reserved.')
           ]
