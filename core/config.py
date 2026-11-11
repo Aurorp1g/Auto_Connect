@@ -113,7 +113,7 @@ def get_network_check_config() -> dict:
             "http://www.msftconnecttest.com/connecttest.txt",
             "http://connect.rom.miui.com/generate_204"
         ],
-        "timeout": 8,
+        "timeout": 5,
     }
 
 

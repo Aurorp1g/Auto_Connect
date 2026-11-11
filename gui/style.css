@@ -35,7 +35,7 @@
     --log-warning: #e5c07b;
 
     --mono: 'Consolas', 'Monaco', 'Courier New', monospace;
-    --font: 'Inter', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+    --font: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
 }
 
 * {
@@ -1341,7 +1341,14 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     gap: 6px;
 }
 
-.footer-tech img {
+.footer-tech .tech-badge {
     height: 20px;
+    line-height: 20px;
+    padding: 0 8px;
     border-radius: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--mono);
+    display: inline-flex;
+    align-items: center;
 }

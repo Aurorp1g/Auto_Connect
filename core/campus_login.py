@@ -9,22 +9,29 @@ import os
 import time
 import urllib
 from urllib import request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from typing import Optional, Tuple
 from .config import CAMPUS_NET_CONFIG, NETWORK_CHECK_CONFIG, COMMON_CONFIG
 
 
 def check_network_connection() -> bool:
-    """检查网络连接状态"""
+    """检查网络连接状态（并行探测多个目标，缩短总超时）"""
     timeout = NETWORK_CHECK_CONFIG["timeout"]
 
-    for url in NETWORK_CHECK_CONFIG["check_targets"]:
+    def probe(url: str) -> bool:
         try:
             with urllib.request.urlopen(url, timeout=timeout) as response:
-                if response.status == 204:
-                    return True
-        except:
-            continue
+                return response.status == 204
+        except Exception:
+            return False
+
+    targets = NETWORK_CHECK_CONFIG["check_targets"]
+    with ThreadPoolExecutor(max_workers=len(targets)) as executor:
+        futures = [executor.submit(probe, url) for url in targets]
+        for future in as_completed(futures):
+            if future.result():
+                return True
     return False
 
 

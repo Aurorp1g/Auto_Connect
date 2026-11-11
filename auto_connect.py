@@ -58,6 +58,9 @@ browser_hiding = False  # True 表示正在隐藏浏览器（不退出程序）
 tray_icon = None  # 托盘图标对象
 app_initialized = False  # 应用是否已初始化
 
+# 网络状态缓存（由后台线程刷新，避免阻塞 eel 事件循环）
+network_status_cache = {'network_ok': False, 'last_update': 0}
+
 failed_count = 0
 MAX_FAILED_COUNT = 5
 SLEEP_DURATION = 1800  # 30分钟
@@ -103,51 +106,45 @@ def generate_post_data():
     
     try:
         startupinfo = None
+        creationflags = 0
         if sys.platform == 'win32':
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
+            creationflags = subprocess.CREATE_NO_WINDOW
         
         node_exe = get_node_path()
         if node_exe is None:
             node_exe = 'node'
         
-        node_check = subprocess.run(
-            [node_exe, '--version'],
+        body_result = subprocess.run(
+            [node_exe, body_js_path],
             capture_output=True,
-            timeout=5,
-            startupinfo=startupinfo
+            text=True,
+            timeout=30,
+            cwd=get_common_config()["post_dir"],
+            startupinfo=startupinfo,
+            creationflags=creationflags
         )
         
-        if node_check.returncode == 0:
-            body_result = subprocess.run(
-                [node_exe, body_js_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                cwd=get_common_config()["post_dir"],
-                startupinfo=startupinfo
-            )
-            
-            if body_result.returncode != 0:
-                result = {'success': False, 'error': 'body.js 执行失败: ' + body_result.stderr}
-                return result
-            
-            header_result = subprocess.run(
-                [node_exe, header_js_path],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                cwd=get_common_config()["post_dir"],
-                startupinfo=startupinfo
-            )
-            
-            if header_result.returncode == 0:
-                result = {'success': True, 'error': ''}
-            else:
-                result = {'success': False, 'error': 'header.js 执行失败: ' + header_result.stderr}
+        if body_result.returncode != 0:
+            result = {'success': False, 'error': 'body.js 执行失败: ' + body_result.stderr}
+            return result
+        
+        header_result = subprocess.run(
+            [node_exe, header_js_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=get_common_config()["post_dir"],
+            startupinfo=startupinfo,
+            creationflags=creationflags
+        )
+        
+        if header_result.returncode == 0:
+            result = {'success': True, 'error': ''}
         else:
-            result = {'success': False, 'error': 'Node.js 不可用'}
+            result = {'success': False, 'error': 'header.js 执行失败: ' + header_result.stderr}
             
     except FileNotFoundError:
         result = {'success': False, 'error': '未找到 Node.js，请安装 Node.js'}
@@ -439,7 +436,8 @@ def get_status():
     
     wifi_ok = is_connected(target_ssid)
     
-    network_ok = check_network()
+    # 直接读取缓存，不在 eel 请求处理线程中做阻塞的网络探测
+    network_ok = network_status_cache.get('network_ok', False)
     
     return {
         'running': service_running,
@@ -447,6 +445,17 @@ def get_status():
         'network_ok': network_ok,
         'campus_logged': wifi_ok and network_ok
     }
+
+
+def _network_status_monitor():
+    """后台线程：定期刷新网络状态，避免阻塞 eel 事件循环"""
+    while True:
+        try:
+            network_status_cache['network_ok'] = check_network()
+            network_status_cache['last_update'] = time.time()
+        except Exception:
+            pass
+        time.sleep(2)
 
 
 last_wifi_status = False
@@ -567,7 +576,10 @@ def save_personalize(config_data):
 @eel.expose
 def generate_post_data_py():
     """生成认证数据"""
-    return generate_post_data()
+    result = generate_post_data()
+    if not result.get('success'):
+        log_message(f"认证数据生成失败: {result.get('error')}", 'error')
+    return result
 
 
 def setup_auto_start(enable):
@@ -792,6 +804,9 @@ def run_gui():
     hidden_mode = '--hidden' in sys.argv
     
     init_app()
+    
+    # 启动后台网络状态监控线程
+    threading.Thread(target=_network_status_monitor, daemon=True).start()
     
     def start_command_server():
         """启动命令服务器，用于接收来自其他实例的命令"""
