@@ -102,6 +102,8 @@ def generate_post_data():
     """执行 JS 文件生成认证数据 (body.js 和 header.js)"""
     body_js_path = get_post_data_js_path()
     header_js_path = get_post_header_js_path()
+    # 使用绝对路径作为子进程工作目录，避免开机自启时工作目录为 System32 导致相对路径失效
+    post_dir = os.path.join(get_project_root(), get_common_config()["post_dir"])
     result = {'success': False, 'error': ''}
     
     try:
@@ -122,7 +124,7 @@ def generate_post_data():
             capture_output=True,
             text=True,
             timeout=30,
-            cwd=get_common_config()["post_dir"],
+            cwd=post_dir,
             startupinfo=startupinfo,
             creationflags=creationflags
         )
@@ -136,7 +138,7 @@ def generate_post_data():
             capture_output=True,
             text=True,
             timeout=30,
-            cwd=get_common_config()["post_dir"],
+            cwd=post_dir,
             startupinfo=startupinfo,
             creationflags=creationflags
         )

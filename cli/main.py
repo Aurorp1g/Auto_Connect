@@ -55,6 +55,8 @@ def auto_login():
     header_file = os.path.join(project_root, 'data', 'post_header.json')
     data_file = os.path.join(project_root, 'data', 'post_data.json')
     log_file = common_config.get("log_file", "auto_connect.log")
+    if not os.path.isabs(log_file):
+        log_file = os.path.join(project_root, log_file)
     
     return campus_auto_login(
         post_url=campus_config.get('post_url', ''),

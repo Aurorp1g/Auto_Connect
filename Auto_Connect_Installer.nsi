@@ -2,7 +2,7 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "Auto_Connect"
-!define PRODUCT_VERSION "2.0.0"
+!define PRODUCT_VERSION "2.0.1"
 !define PRODUCT_PUBLISHER "Aurorp1g"
 !define PRODUCT_WEB_SITE "https://github.com/Aurorp1g/Auto_Connect"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Auto_Connect.exe"
