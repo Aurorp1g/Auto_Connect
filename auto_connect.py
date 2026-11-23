@@ -57,6 +57,8 @@ browser_visible = False
 browser_hiding = False  # True 表示正在隐藏浏览器（不退出程序）
 tray_icon = None  # 托盘图标对象
 app_initialized = False  # 应用是否已初始化
+remote_service = False  # True 表示后台服务运行在无头进程（SYSTEM 会话），当前进程仅作托盘遥控
+remote_running = False  # 后台服务的运行状态（远程模式下由 STATUS 命令同步）
 
 # 网络状态缓存（由后台线程刷新，避免阻塞 eel 事件循环）
 network_status_cache = {'network_ok': False, 'last_update': 0}
@@ -64,6 +66,7 @@ network_status_cache = {'network_ok': False, 'last_update': 0}
 failed_count = 0
 MAX_FAILED_COUNT = 5
 SLEEP_DURATION = 1800  # 30分钟
+REMOTE_CONTROL_PORT = 8890  # 无头后台服务本地控制端口（供用户会话托盘进程遥控）
 
 def setup_log_file():
     """确保日志文件存在"""
@@ -385,11 +388,29 @@ def calculate_sleep_duration():
 @eel.expose
 def init_app():
     """初始化应用"""
-    global app_initialized
+    global app_initialized, remote_service, remote_running
     setup_log_file()
     
     if not app_initialized:
         app_initialized = True
+        tray_only = '--tray-only' in sys.argv
+        # 检测无头后台服务（SYSTEM 会话）是否在运行，若在则进入远程控制模式，避免重复启动服务
+        # 无头服务可能仍在初始化控制服务器，短暂重试等待
+        resp = None
+        for _ in range(6):
+            resp = send_remote_command('STATUS', timeout=1)
+            if resp is not None:
+                break
+            time.sleep(0.5)
+        if resp is not None:
+            remote_service = True
+            remote_running = (resp == 'RUNNING')
+            log_message('检测到后台无头服务，进入远程控制模式', 'info')
+        elif tray_only:
+            # 纯托盘遥控进程：即使暂未连上后台服务，也保持远程模式，避免在本地重复启动服务
+            remote_service = True
+            remote_running = False
+            log_message('进入托盘遥控模式（等待后台服务就绪）', 'warning')
         if is_first_run():
             try:
                 eel.display_first_run()
@@ -397,7 +418,7 @@ def init_app():
                 pass
         else:
             personalize = get_personalize_config()
-            if personalize.get('auto_start'):
+            if personalize.get('auto_start') and not remote_service and not tray_only:
                 start_service()
 
 
@@ -412,7 +433,16 @@ def push_log_to_front(message: str, msg_type: str = 'info'):
 @eel.expose
 def start_service():
     """启动服务"""
-    global service_thread, service_running
+    global service_thread, service_running, remote_running
+    
+    if remote_service:
+        resp = send_remote_command('START')
+        if resp == 'OK':
+            remote_running = True
+            log_message('后台服务已启动', 'info')
+        else:
+            log_message('后台服务启动失败：无法连接后台服务', 'error')
+        return
     
     if not service_running:
         service_running = True
@@ -424,9 +454,18 @@ def start_service():
 @eel.expose
 def stop_service():
     """停止服务"""
-    global service_running
+    global service_running, remote_running
+    
+    if remote_service:
+        resp = send_remote_command('STOP')
+        if resp == 'OK':
+            remote_running = False
+            log_message('后台服务已停止', 'info')
+        else:
+            log_message('后台服务停止失败：无法连接后台服务', 'error')
+        return
+    
     service_running = False
-    log_message('服务已停止', 'info')
     log_message('服务已停止', 'info')
 
 
@@ -441,8 +480,10 @@ def get_status():
     # 直接读取缓存，不在 eel 请求处理线程中做阻塞的网络探测
     network_ok = network_status_cache.get('network_ok', False)
     
+    running = remote_running if remote_service else service_running
+    
     return {
-        'running': service_running,
+        'running': running,
         'wifi_connected': wifi_ok,
         'network_ok': network_ok,
         'campus_logged': wifi_ok and network_ok
@@ -584,58 +625,134 @@ def generate_post_data_py():
     return result
 
 
-def setup_auto_start(enable):
-    """设置开机自启动"""
-    import winreg
-    import logging
-    
+def is_admin():
+    """判断当前进程是否已提升为管理员权限"""
+    if sys.platform != 'win32':
+        return True
+    try:
+        import ctypes
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
+
+
+def run_elevated(args):
+    """以管理员权限重新启动当前程序，args 为附加命令行参数列表（返回 True 表示已成功触发 UAC 提升）"""
+    import ctypes
+    if getattr(sys, 'frozen', False):
+        exe = sys.executable
+        params = ' '.join(args)
+    else:
+        exe = sys.executable
+        script = os.path.abspath(sys.argv[0])
+        params = f'"{script}" ' + ' '.join(args)
+    try:
+        # runas 触发 UAC 提权；show=0 隐藏提权后进程的窗口
+        result = ctypes.windll.shell32.ShellExecuteW(None, 'runas', exe, params, None, 0)
+        return result > 32
+    except Exception as e:
+        log_message(f'请求管理员权限失败: {e}', 'error')
+        return False
+
+
+def apply_auto_start_task(enable):
+    """注册/删除开机自启计划任务（需在已提权进程中调用）
+
+    注册两个任务：
+    1) AutoConnect       —— 启动时、SYSTEM 账户、无头后台服务（登录前运行）
+    2) AutoConnectTray   —— 用户登录时、当前用户、仅托盘遥控进程（登录后显示最小化托盘）
+    """
+    import subprocess
+    task_name = 'AutoConnect'
+    tray_task_name = 'AutoConnectTray'
     if getattr(sys, 'frozen', False):
         app_path = sys.executable
-    elif sys.argv and sys.argv[0]:
-        app_path = os.path.abspath(sys.argv[0])
     else:
-        app_path = sys.executable
-    app_name = "AutoConnect"
-    
-    log_message(f"设置开机自启动: enable={enable}, app_path={app_path}")
-    
-    key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-    key = None
-    success = False
-    
+        app_path = os.path.abspath(sys.argv[0])
+    ps_exe = app_path.replace("'", "''")
+
+    if enable:
+        ps_script = (
+            # 主任务：启动时 SYSTEM 无头服务
+            "$a1 = New-ScheduledTaskAction -Execute '%s' -Argument '--headless'; "
+            "$t1 = New-ScheduledTaskTrigger -AtStartup; "
+            "$p1 = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest; "
+            "$s1 = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero); "
+            "Register-ScheduledTask -TaskName '%s' -Action $a1 -Trigger $t1 -Principal $p1 -Settings $s1 -Force | Out-Null; "
+            # 托盘任务：用户登录时，当前用户，仅托盘遥控
+            "$a2 = New-ScheduledTaskAction -Execute '%s' -Argument '--tray-only'; "
+            "$t2 = New-ScheduledTaskTrigger -AtLogOn; "
+            "$p2 = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest; "
+            "$s2 = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero); "
+            "Register-ScheduledTask -TaskName '%s' -Action $a2 -Trigger $t2 -Principal $p2 -Settings $s2 -Force | Out-Null; "
+            "$c1 = Get-ScheduledTask -TaskName '%s' -ErrorAction SilentlyContinue; "
+            "$c2 = Get-ScheduledTask -TaskName '%s' -ErrorAction SilentlyContinue; "
+            "if ($c1 -and $c2) { Write-Output ('VERIFY_OK:' + $c1.State + ',' + $c2.State) } else { Write-Output 'VERIFY_FAIL'; exit 1 }"
+        ) % (ps_exe, task_name, ps_exe, tray_task_name, task_name, tray_task_name)
+    else:
+        ps_script = (
+            "$r1 = Get-ScheduledTask -TaskName '%s' -ErrorAction SilentlyContinue; "
+            "$r2 = Get-ScheduledTask -TaskName '%s' -ErrorAction SilentlyContinue; "
+            "if ($r1) { Unregister-ScheduledTask -TaskName '%s' -Confirm:$false | Out-Null; Write-Output 'DELETED_MAIN' } "
+            "if ($r2) { Unregister-ScheduledTask -TaskName '%s' -Confirm:$false | Out-Null; Write-Output 'DELETED_TRAY' } "
+            "if (-not $r1 -and -not $r2) { Write-Output 'NOT_FOUND' }"
+        ) % (task_name, tray_task_name, task_name, tray_task_name)
+
     try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE | winreg.KEY_QUERY_VALUE)
-        
+        startupinfo = None
+        creationflags = 0
+        if sys.platform == 'win32':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            creationflags = subprocess.CREATE_NO_WINDOW
+
+        result = subprocess.run(
+            ['powershell', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', ps_script],
+            capture_output=True, text=True, errors='replace',
+            startupinfo=startupinfo, creationflags=creationflags
+        )
+        output = (result.stdout or '').strip()
+        if result.returncode != 0:
+            detail = output or (result.stderr or '').strip()
+            log_message(f'{"注册" if enable else "删除"}开机自启计划任务失败: {detail}', 'error')
+            return False
+
         if enable:
-            app_path_with_args = f'"{app_path}" --hidden'
-            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, app_path_with_args)
-            log_message(f"已添加注册表项: {app_name} -> {app_path_with_args}")
-            
+            log_message(f'已注册开机自启计划任务: {task_name} + {tray_task_name}（{output}）', 'info')
+            # 清理旧的登录自启注册表项，避免与计划任务重复启动
             try:
-                verify_value, _ = winreg.QueryValueEx(key, app_name)
-                log_message(f"验证读取: {verify_value}")
-                if verify_value != app_path:
-                    log_message(f"警告: 写入值与读取值不一致!", 'warning')
-            except FileNotFoundError:
-                log_message(f"错误: 写入后无法读取到注册表项!", 'error')
-        else:
-            try:
-                winreg.DeleteValue(key, app_name)
-                log_message(f"已删除注册表项: {app_name}")
-            except FileNotFoundError:
-                log_message(f"注册表项不存在: {app_name}", 'warning')
-        success = True
-    except Exception as e:
-        log_message(f"设置开机自启动失败: {e}", 'error')
-        logging.error(f"设置开机自启动失败: {e}")
-    finally:
-        if key:
-            try:
+                import winreg
+                key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE)
+                try:
+                    winreg.DeleteValue(key, 'AutoConnect')
+                    log_message('已清理旧的登录自启注册表项', 'info')
+                except FileNotFoundError:
+                    pass
                 winreg.CloseKey(key)
             except Exception:
                 pass
-    
-    return success
+        else:
+            log_message(f'已删除开机自启计划任务: {task_name} + {tray_task_name}（{output}）', 'info')
+        return True
+    except Exception as e:
+        log_message(f'计划任务操作异常: {e}', 'error')
+        return False
+
+
+def setup_auto_start(enable):
+    """设置开机自启动：优先走计划任务（登录前启动），需要管理员权限时自动请求 UAC 提升"""
+    if sys.platform != 'win32':
+        return True
+
+    log_message(f"设置开机自启动: enable={enable}")
+
+    if is_admin():
+        return apply_auto_start_task(enable)
+
+    flag = '--apply-autostart' if enable else '--remove-autostart'
+    log_message(f'需要管理员权限，正在请求 UAC 提权以{"开启" if enable else "关闭"}开机自启...', 'info')
+    return run_elevated([flag])
 
 
 def activate_browser_window():
@@ -740,7 +857,10 @@ def get_tray_menu():
 
     def do_exit(icon, item):
         global service_running, chrome_process
-        service_running = False
+        if remote_service:
+            send_remote_command('EXIT')
+        else:
+            service_running = False
         if chrome_process is not None:
             chrome_process.terminate()
             chrome_process = None
@@ -753,30 +873,75 @@ def get_tray_menu():
         os._exit(0)
 
     def do_stop(icon, item):
-        global service_running
-        if service_running:
-            service_running = False
-            log_message('服务已停止', 'info')
-            push_log_to_front('自动连接服务已停止', 'warning')
+        global service_running, remote_running
+        if remote_service:
+            resp = send_remote_command('STOP')
+            if resp == 'OK':
+                remote_running = False
+                log_message('后台服务已停止', 'info')
+            else:
+                log_message('后台服务停止失败：无法连接后台服务', 'error')
+                try:
+                    icon.notify('无法连接后台服务，可能已被关闭', '停止失败')
+                except Exception:
+                    pass
+        else:
+            if service_running:
+                service_running = False
+                log_message('服务已停止', 'info')
+                push_log_to_front('自动连接服务已停止', 'warning')
+        icon.menu = get_tray_menu()
+
+    def do_start(icon, item):
+        global remote_running
+        if remote_service:
+            resp = send_remote_command('START')
+            if resp == 'OK':
+                remote_running = True
+                log_message('后台服务已启动', 'info')
+            else:
+                log_message('后台服务启动失败：无法连接后台服务', 'error')
+                try:
+                    icon.notify('无法连接后台服务，可能已被关闭', '启动失败')
+                except Exception:
+                    pass
+        else:
+            start_service()
+            log_message('服务已启动', 'info')
         icon.menu = get_tray_menu()
 
     def do_restart(icon, item):
-        global service_running
-        if service_running:
-            service_running = False
-            log_message('服务已停止', 'info')
-        # 等待旧服务线程退出，避免与重启后的新线程重叠
-        time.sleep(1)
-        start_service()
-        log_message('服务已重启', 'info')
-        push_log_to_front('自动连接服务已重启', 'info')
+        global service_running, remote_running
+        if remote_service:
+            resp = send_remote_command('RESTART')
+            if resp == 'OK':
+                remote_running = True
+                log_message('后台服务已重启', 'info')
+            else:
+                log_message('后台服务重启失败：无法连接后台服务', 'error')
+                try:
+                    icon.notify('无法连接后台服务，可能已被关闭', '重启失败')
+                except Exception:
+                    pass
+        else:
+            if service_running:
+                service_running = False
+                log_message('服务已停止', 'info')
+            # 等待旧服务线程退出，避免与重启后的新线程重叠
+            time.sleep(1)
+            start_service()
+            log_message('服务已重启', 'info')
+            push_log_to_front('自动连接服务已重启', 'info')
         icon.menu = get_tray_menu()
+
+    running = remote_running if remote_service else service_running
     
     return pystray.Menu(
         pystray.MenuItem('显示窗口', do_show, visible=not browser_visible),
         pystray.MenuItem('隐藏窗口', do_hide, visible=browser_visible),
-        pystray.MenuItem('停止服务', do_stop, visible=service_running),
-        pystray.MenuItem('重启服务', do_restart),
+        pystray.MenuItem('停止服务', do_stop, visible=running),
+        pystray.MenuItem('启动服务', do_start, visible=not running),
+        pystray.MenuItem('重启服务', do_restart, visible=running),
         pystray.MenuItem('退出', do_exit)
     )
 
@@ -797,13 +962,134 @@ def hide_browser():
     log_message('浏览器窗口已隐藏', 'info')
 
 
+def send_remote_command(cmd, timeout=3):
+    """向无头后台服务发送控制命令，返回响应字符串；连接失败返回 None"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        s.connect(('127.0.0.1', REMOTE_CONTROL_PORT))
+        s.sendall(cmd.encode('utf-8'))
+        data = s.recv(1024).decode('utf-8').strip()
+        s.close()
+        return data
+    except Exception:
+        return None
+
+
+def start_headless_control_server():
+    """无头模式下的本地控制服务器，供用户会话的托盘进程远程查询/控制后台服务"""
+    try:
+        ctrl_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ctrl_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        ctrl_sock.bind(('127.0.0.1', REMOTE_CONTROL_PORT))
+        ctrl_sock.listen(5)
+        ctrl_sock.settimeout(2)
+        while True:
+            try:
+                conn, addr = ctrl_sock.accept()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+            try:
+                data = conn.recv(1024).decode('utf-8').strip()
+                cmd = data.upper()
+                if cmd == 'STATUS':
+                    conn.sendall(('RUNNING' if service_running else 'STOPPED').encode('utf-8'))
+                elif cmd == 'STOP':
+                    stop_service()
+                    conn.sendall(b'OK')
+                elif cmd == 'START':
+                    start_service()
+                    conn.sendall(b'OK')
+                elif cmd == 'RESTART':
+                    stop_service()
+                    time.sleep(1)
+                    start_service()
+                    conn.sendall(b'OK')
+                elif cmd == 'EXIT':
+                    conn.sendall(b'OK')
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                    import os
+                    os._exit(0)
+                else:
+                    conn.sendall(b'UNKNOWN')
+            except Exception:
+                pass
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        try:
+            ctrl_sock.close()
+        except Exception:
+            pass
+    except Exception as e:
+        log_message(f'无头控制服务器启动失败: {e}', 'error')
+
+
+def _acquire_single_instance_mutex():
+    """获取跨会话单实例互斥体，防止计划任务重复启动无头服务"""
+    if sys.platform != 'win32':
+        return True, None
+    try:
+        import ctypes
+        from ctypes import wintypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.CreateMutexW.restype = wintypes.HANDLE
+        kernel32.CreateMutexW.argtypes = [wintypes.LPVOID, wintypes.BOOL, wintypes.LPCWSTR]
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel32.CloseHandle.restype = wintypes.BOOL
+        handle = kernel32.CreateMutexW(None, False, "Global\\AutoConnect_Headless")
+        if not handle:
+            return True, None
+        if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            kernel32.CloseHandle(handle)
+            return False, None
+        return True, handle
+    except Exception:
+        return True, None
+
+
+def run_headless():
+    """无头模式：不加载 GUI/托盘/浏览器，直接运行后台连接服务（供系统启动时计划任务调用）"""
+    setup_log_file()
+    log_message('无头模式启动（无 GUI，登录前运行）', 'info')
+
+    held, handle = _acquire_single_instance_mutex()
+    if not held:
+        log_message('已有无头实例在运行，本实例退出', 'warning')
+        return
+
+    try:
+        start_service()
+        # 启动本地控制服务器，供用户会话的托盘进程远程查询/控制
+        threading.Thread(target=start_headless_control_server, daemon=True).start()
+        # 阻塞主线程，保持进程常驻（服务停止/重启由控制服务器命令驱动）
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if handle is not None:
+            try:
+                import ctypes
+                ctypes.windll.kernel32.CloseHandle(handle)
+            except Exception:
+                pass
+
+
 def run_gui():
     """运行 GUI 应用"""
     gui_path = os.path.join(get_project_root(), 'gui')
     
     eel.init(gui_path, ['.html', '.js', '.css'])
     
-    hidden_mode = '--hidden' in sys.argv
+    hidden_mode = '--hidden' in sys.argv or '--tray-only' in sys.argv
     
     init_app()
     
@@ -931,19 +1217,31 @@ def setup_system_tray():
 
 
 if __name__ == "__main__":
-    # 检查是否已有实例在运行
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex(('localhost', 8888))
-    sock.close()
-    
-    if result == 0:
-        print("程序已在运行，正在跳转...")
-        try:
-            cmd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            cmd_sock.connect(('localhost', 8889))
-            cmd_sock.send(b'SHOW_WINDOW')
-            cmd_sock.close()
-        except Exception:
-            pass
-    else:
+    if '--headless' in sys.argv:
+        run_headless()
+    elif '--apply-autostart' in sys.argv:
+        # 提权后的进程：注册开机自启计划任务后退出
+        apply_auto_start_task(True)
+    elif '--remove-autostart' in sys.argv:
+        # 提权后的进程：删除开机自启计划任务后退出
+        apply_auto_start_task(False)
+    elif '--tray-only' in sys.argv:
+        # 用户登录后由计划任务拉起，显示托盘并遥控无头后台服务
         run_gui()
+    else:
+        # 检查是否已有实例在运行
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('localhost', 8888))
+        sock.close()
+        
+        if result == 0:
+            print("程序已在运行，正在跳转...")
+            try:
+                cmd_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                cmd_sock.connect(('localhost', 8889))
+                cmd_sock.send(b'SHOW_WINDOW')
+                cmd_sock.close()
+            except Exception:
+                pass
+        else:
+            run_gui()
